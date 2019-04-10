@@ -10,18 +10,18 @@ import (
 )
 
 type Tst struct {
-	A string `json:"a"`
-	Number uint `json:"number"`
-	Time time.Time `json:"time"`
+	A      string    `json:"a"`
+	Number uint      `json:"number"`
+	Time   time.Time `json:"time"`
 }
 
 func TestInitLogger(t *testing.T) {
 	QyLogger.Debug("test init debug log", zap.String("a", "asss"))
 
-	tst := &Tst{A:"fff", Number:44}
+	tst := &Tst{A: "fff", Number: 44}
 	QyLogger.Debug("test debug log struct", zap.Any("tst", tst))
 
-	tst1 := &Tst{A:"fff", Number:44, Time:time.Now()}
+	tst1 := &Tst{A: "fff", Number: 44, Time: time.Now()}
 	QyLogger.Debug("test debug log struct", zap.Any("tst", tst1))
 
 	InitLogger(zap.DebugLevel, "", "", true)

@@ -1,8 +1,8 @@
 package g_metrics
 
 import (
-	"testing"
 	"github.com/stretchr/testify/assert"
+	"testing"
 	"time"
 )
 
@@ -42,8 +42,8 @@ func TestCreateGauge(t *testing.T) {
 }
 
 type testMeter struct {
-	name string
-	help string
+	name  string
+	help  string
 	label []string
 }
 

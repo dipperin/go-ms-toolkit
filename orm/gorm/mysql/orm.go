@@ -126,7 +126,6 @@ func (gm *gormMysql) initCdDb() {
 	gm.utilDB = openedDb
 }
 
-
 func substr(str string, start, length int) string {
 	rs := []rune(str)
 	rl := len(rs)

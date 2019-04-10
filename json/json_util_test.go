@@ -18,9 +18,8 @@ func TestParseJson(t *testing.T) {
 }
 
 func TestStringifyJson(t *testing.T) {
-	var model = testModel{Text:"123"}
+	var model = testModel{Text: "123"}
 
 	str := StringifyJson(model)
 	assert.Equal(t, `{"text":"123"}`, str)
 }
-

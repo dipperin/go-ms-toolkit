@@ -18,14 +18,12 @@ func Test_newGormMysql(t *testing.T) {
 	gm.CreateDB()
 	gm.GetUtilDB()
 
-
 	gm2 := newGormMysql(conf, false)
 	assert.NotNil(t, gm2)
 
 	assert.NotNil(t, gm2.GetDB())
 
 	gm2.ClearAllData()
-
 
 	gm.DropDB()
 }

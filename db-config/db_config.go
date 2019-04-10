@@ -29,9 +29,9 @@ func NewDbConfig() *DbConfig {
 	}
 	appConf := GetAppConfig()
 	conf := &DbConfig{
-		Username: appConf.MysqlUname,
-		Password: pwd,
-		Host:     appConf.MysqlHost,
+		Username:     appConf.MysqlUname,
+		Password:     pwd,
+		Host:         appConf.MysqlHost,
 		Port:         appConf.MysqlPort,
 		MaxIdleConns: 10,
 		MaxOpenConns: 100,
@@ -44,9 +44,6 @@ func NewDbConfig() *DbConfig {
 
 	return conf
 }
-
-
-
 
 var appConfig *AppConfig
 
@@ -67,7 +64,6 @@ func GetAppConfig() *AppConfig {
 	}
 	return appConfig
 }
-
 
 // 应用的配置
 type AppConfig struct {
@@ -124,4 +120,3 @@ func GetProdDockerConf() *AppConfig {
 		MongoUname:     "",
 	}
 }
-
