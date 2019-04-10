@@ -17,8 +17,8 @@ before_install:
   - sudo mysql_upgrade -u root -proot
   - sudo service mysql restart
   - sudo mkdir -p /usr/local/.db
-  - sudo echo root > /usr/local/.db/mysql.uname
-  - sudo echo root > /usr/local/.db/mysql.pas
+  - echo root | sudo tee /usr/local/.db/mysql.uname
+  - echo root | sudo tee /usr/local/.db/mysql.pas
   - GO111MODULE=on
   - go mod tidy
 
