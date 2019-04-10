@@ -1,0 +1,15 @@
+language: go
+
+go:
+  - 1.11.x
+  - master
+
+before_install:
+  - GO111MODULE=on
+  - go mod tidy
+
+script:
+  - go test -race -coverprofile=coverage.txt -covermode=atomic
+
+after_success:
+  - bash <(curl -s https://codecov.io/bash)
