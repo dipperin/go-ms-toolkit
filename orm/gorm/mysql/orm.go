@@ -43,7 +43,24 @@ func (gm *gormMysql) GetDB() *gorm.DB {
 }
 
 func (gm *gormMysql) GetUtilDB() *gorm.DB {
-	return gm.utilDB
+	log.QyLogger.Info("init db connection: ", zap.String("db_host", gm.dbConfig.Host),
+		zap.String("db_name", gm.dbConfig.DbName), zap.String("user", gm.dbConfig.Username))
+
+	openedDb, err := gorm.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8&parseTime=True&loc=Local", gm.dbConfig.Username, gm.dbConfig.Password, gm.dbConfig.Host, gm.dbConfig.Port, gm.dbConfig.DbName))
+	if err != nil {
+		panic("数据库连接出错：" + err.Error())
+	}
+	openedDb.DB().SetMaxIdleConns(gm.dbConfig.MaxIdleConns)
+	openedDb.DB().SetMaxOpenConns(gm.dbConfig.MaxOpenConns)
+	// 避免久了不使用，导致连接被mysql断掉的问题
+	openedDb.DB().SetConnMaxLifetime(time.Hour * 2)
+	// 如果不是生产数据库则打开详细日志
+	//if !strings.Contains(dbConfig.DbName, "prod") {
+	if substr(gm.dbConfig.DbName, len(gm.dbConfig.DbName)-4, 4) != "prod" {
+		openedDb.LogMode(true)
+	}
+
+	return openedDb
 }
 
 func (gm *gormMysql) ClearAllData() {
