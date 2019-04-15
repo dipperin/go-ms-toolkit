@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/dipperin/go-ms-toolkit/db-config"
 	"github.com/dipperin/go-ms-toolkit/log"
-	_ "github.com/go-sql-driver/mysql"
 	"github.com/jinzhu/gorm"
 	"go.uber.org/zap"
 	"strings"
