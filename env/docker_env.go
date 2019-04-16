@@ -1,8 +1,24 @@
 package env
 
-import "flag"
+import (
+	"flag"
+	"os"
+)
 
 func GetUseDocker() int {
+	// 也可以在环境变量中设置
+	dEnv := os.Getenv("docker_env")
+	if dEnv != "" {
+		switch dEnv {
+		case "1":
+			return 1
+		case "2":
+			return 2
+		default:
+			return 0
+		}
+	}
+
 	f := flag.Lookup("docker_env")
 	if f == nil || f.Value.String() == "0" {
 		// 非docker
