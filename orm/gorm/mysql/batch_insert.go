@@ -23,7 +23,11 @@ func DoBatchInsert(tableName string, data interface{}, db *gorm.DB) error {
 
 // 每次批量插入都要new一个
 func NewBatchInsertSql(tableName string) *BatchInsertSql {
-	return &BatchInsertSql{ TableName: tableName }
+	nowT := time.Now()
+	return &BatchInsertSql{
+		TableName: tableName,
+		createdAt: nowT.Format("2006-01-02 15:04:05"),
+	}
 }
 
 // 批量插入组装sql
@@ -32,6 +36,8 @@ type BatchInsertSql struct {
 	// 保存了属性信息，可以在组装sql时根据属性做不同的操作
 	Fields    []reflect.StructField
 	InsertSql string
+
+	createdAt string
 }
 
 func (b *BatchInsertSql) Add(obj interface{}) {
@@ -44,9 +50,9 @@ func (b *BatchInsertSql) Add(obj interface{}) {
 	if len(b.Fields) == 0 {
 		fieldNames, insertS := getInsertFieldStr(rv.Type(), flowIgnoreFields)
 		b.Fields = fieldNames
-		b.InsertSql = "insert into " + b.TableName + insertS + " values " + getObjValuesForSql(rv, b.Fields)
+		b.InsertSql = "insert into " + b.TableName + insertS + " values " + b.getObjValuesForSql(rv, b.Fields)
 	} else {
-		b.InsertSql += "," + getObjValuesForSql(rv, b.Fields)
+		b.InsertSql += "," + b.getObjValuesForSql(rv, b.Fields)
 	}
 }
 
@@ -77,14 +83,18 @@ func getInsertFieldStr(rt reflect.Type, ignoreFs []string) (fieldNames []reflect
 }
 
 // 获取插入sql的值部分
-func getObjValuesForSql(rv reflect.Value, fields []reflect.StructField) (result string) {
+func (b *BatchInsertSql) getObjValuesForSql(rv reflect.Value, fields []reflect.StructField) (result string) {
 	result = "("
 	for _, f := range fields {
 		//logger.Debug(f.Type.Kind().String())
 		//logger.Debug(f.Type.Name())
 		// 尚未实现根据类型做适配，因此必须都是string
 		if f.Type.Kind() == reflect.Struct && strings.Contains(f.Type.Name(), "Time") {
-			result += "'" + rv.FieldByName(f.Name).Interface().(time.Time).Format("2006-01-02 15:04:05") + "',"
+			if f.Name == "CreatedAt" || f.Name == "UpdatedAt" {
+				result += "'" + b.createdAt + "',"
+			} else {
+				result += "'" + rv.FieldByName(f.Name).Interface().(time.Time).Format("2006-01-02 15:04:05") + "',"
+			}
 		} else if f.Type.Kind() == reflect.String {
 			result += "'" + ClearData4str(rv.FieldByName(f.Name).String()) + "',"
 		} else if f.Type.Kind() == reflect.Bool {
