@@ -63,6 +63,10 @@ func getInsertFieldStr(rt reflect.Type, ignoreFs []string) (fieldNames []reflect
 		if !StrSliceContains(ignoreFs, tmpName) {
 			fieldNames = append(fieldNames, f)
 			fStr += gorm.ToDBName(tmpName) + ","
+			// 保证ID只被加一次
+		} else if f.Name == "ID" && f.Type.Kind() == reflect.String {
+			fieldNames = append(fieldNames, f)
+			fStr += gorm.ToDBName(tmpName) + ","
 		}
 	})
 	if fStr != "" {
