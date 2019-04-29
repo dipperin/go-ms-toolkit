@@ -10,7 +10,17 @@ type Producer struct {
 	producers []*nsq.Producer
 }
 
-func (p *Producer) newProduce(addr string) *nsq.Producer {
+func NewNsqProducer(addrs []string) *Producer {
+	p := &Producer{}
+
+	for i := range addrs {
+		p.newProduce(addrs[i])
+	}
+
+	return p
+}
+
+func (p *Producer) newProduce(addr string) {
 	producer, err := nsq.NewProducer(addr, nsq.NewConfig())
 
 	if err != nil {
@@ -18,7 +28,7 @@ func (p *Producer) newProduce(addr string) *nsq.Producer {
 		panic(err)
 	}
 
-	return producer
+	p.producers = append(p.producers, producer)
 }
 
 func (p *Producer) PubMsg(topic string, msg interface{}) error {
