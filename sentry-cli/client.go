@@ -16,12 +16,14 @@ func Client() *raven.Client {
 	}
 
 	dsn := os.Getenv("sentry_dsn")
+	log.QyLogger.Info("sentry dsn: " + dsn)
 	c, err := raven.New(dsn)
 	if err != nil {
 		if env.GetUseDocker() == 2 {
 			panic(err)
 		} else {
 			log.QyLogger.Info("init sentry client failed", zap.Error(err))
+			return c
 		}
 	}
 	client = c
