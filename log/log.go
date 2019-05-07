@@ -12,6 +12,7 @@ var QyLogger *zap.Logger
 func init() {
 	if QyLogger == nil {
 		cfg := zap.NewDevelopmentConfig()
+		cfg.DisableCaller = true
 		// set log output
 		cfg.OutputPaths = []string{"stdout"}
 		cfg.Level = zap.NewAtomicLevelAt(zap.DebugLevel)
@@ -52,8 +53,9 @@ func newLogConfig(lvl zapcore.Level, targetDir, logFileName string, withConsole 
 	eConfig.EncodeTime = zapcore.ISO8601TimeEncoder
 
 	config := &zap.Config{
-		Level:       zap.NewAtomicLevelAt(lvl),
-		Development: false,
+		Level:         zap.NewAtomicLevelAt(lvl),
+		DisableCaller: true,
+		Development:   false,
 		Sampling: &zap.SamplingConfig{
 			Initial:    100,
 			Thereafter: 100,
