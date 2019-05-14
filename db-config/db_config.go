@@ -51,7 +51,7 @@ func GetAppConfig() *AppConfig {
 	if appConfig != nil {
 		return appConfig
 	}
-	useDocker := env.GetUseDocker()
+	useDocker := qy_env.GetUseDocker()
 	if useDocker == 1 {
 		fmt.Println("采用的是dev容器的配置")
 		appConfig = GetDevDockerConf()

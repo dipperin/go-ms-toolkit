@@ -1,4 +1,4 @@
-package env
+package qyenv
 
 import (
 	"flag"
@@ -30,4 +30,19 @@ func GetUseDocker() int {
 		// 默认返回开发和测试的配置
 		return 1
 	}
+}
+
+// 0 非docker环境 1 docker中非生产环境 2 docker中生产环境
+func GetDockerEnv() string {
+	return os.Getenv("docker_env")
+}
+
+// db名称配置 dev test preprod prod
+func GetDBEnv() string {
+	return os.Getenv("db_env")
+}
+
+// 程序执行环境配置 dev test preprod prod
+func GetRunEnv() string {
+	return os.Getenv("run_env")
 }
