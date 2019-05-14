@@ -2,7 +2,7 @@ package db_config
 
 import (
 	"fmt"
-	"github.com/dipperin/go-ms-toolkit/env"
+	"github.com/dipperin/go-ms-toolkit/qyenv"
 	"io/ioutil"
 	"strings"
 )
@@ -51,7 +51,7 @@ func GetAppConfig() *AppConfig {
 	if appConfig != nil {
 		return appConfig
 	}
-	useDocker := qy_env.GetUseDocker()
+	useDocker := qyenv.GetUseDocker()
 	if useDocker == 1 {
 		fmt.Println("采用的是dev容器的配置")
 		appConfig = GetDevDockerConf()
