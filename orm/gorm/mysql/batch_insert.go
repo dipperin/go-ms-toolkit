@@ -109,9 +109,6 @@ func (b *BatchInsertSql) getObjValuesForSql(rv reflect.Value, fields []reflect.S
 			panic("not support map or array in batch insert: " + f.Name)
 		} else {
 			if f.Tag.Get("sql") != "-" {
-				if rv.FieldByName(f.Name).CanInterface() {
-					panic(`use sql:- in tag for private no sql value: ` + f.Name)
-				}
 				result += fmt.Sprintf("'%v',", rv.FieldByName(f.Name).Interface())
 			}
 		}
