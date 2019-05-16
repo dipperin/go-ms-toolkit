@@ -64,15 +64,17 @@ func (b *BatchInsertSql) ResultSql() string {
 func getInsertFieldStr(rt reflect.Type, ignoreFs []string) (fieldNames []reflect.StructField, fStr string) {
 	fStr = "("
 	EnumAnObjFieldNames(rt, func(f reflect.StructField) {
-		tmpName := f.Name
-		// 如果没有ignore则纳入要用的字段中
-		if !StrSliceContains(ignoreFs, tmpName) {
-			fieldNames = append(fieldNames, f)
-			fStr += gorm.ToDBName(tmpName) + ","
-			// 保证ID只被加一次
-		} else if f.Name == "ID" && f.Type.Kind() == reflect.String {
-			fieldNames = append(fieldNames, f)
-			fStr += gorm.ToDBName(tmpName) + ","
+		if f.Tag.Get("sql") != "-" {
+			tmpName := f.Name
+			// 如果没有ignore则纳入要用的字段中
+			if !StrSliceContains(ignoreFs, tmpName) {
+				fieldNames = append(fieldNames, f)
+				fStr += gorm.ToDBName(tmpName) + ","
+				// 保证ID只被加一次
+			} else if f.Name == "ID" && f.Type.Kind() == reflect.String {
+				fieldNames = append(fieldNames, f)
+				fStr += gorm.ToDBName(tmpName) + ","
+			}
 		}
 	})
 	if fStr != "" {
@@ -103,8 +105,15 @@ func (b *BatchInsertSql) getObjValuesForSql(rv reflect.Value, fields []reflect.S
 			} else {
 				result += "'0',"
 			}
+		} else if f.Type.Kind() == reflect.Map || f.Type.Kind() == reflect.Array {
+			panic("not support map or array in batch insert: " + f.Name)
 		} else {
-			result += fmt.Sprintf("'%v',", rv.FieldByName(f.Name).Interface())
+			if f.Tag.Get("sql") != "-" {
+				if rv.FieldByName(f.Name).CanInterface() {
+					panic(`use sql:- in tag for private no sql value: ` + f.Name)
+				}
+				result += fmt.Sprintf("'%v',", rv.FieldByName(f.Name).Interface())
+			}
 		}
 	}
 	result = result[:(len(result) - 1)]
