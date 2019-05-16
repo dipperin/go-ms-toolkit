@@ -1,8 +1,8 @@
 package sentry_cli
 
 import (
-	"github.com/dipperin/go-ms-toolkit/env"
 	"github.com/dipperin/go-ms-toolkit/log"
+	"github.com/dipperin/go-ms-toolkit/qyenv"
 	"github.com/getsentry/raven-go"
 	"go.uber.org/zap"
 	"os"
@@ -19,7 +19,7 @@ func Client() *raven.Client {
 	log.QyLogger.Info("sentry dsn: " + dsn)
 	c, err := raven.New(dsn)
 	if err != nil {
-		if env.GetUseDocker() == 2 {
+		if qyenv.GetUseDocker() == 2 {
 			panic(err)
 		} else {
 			log.QyLogger.Info("init sentry client failed", zap.Error(err))
