@@ -46,3 +46,8 @@ func GetDBEnv() string {
 func GetRunEnv() string {
 	return os.Getenv("run_env")
 }
+
+// determine if it is a unit test environment
+func IsUnitTestEnv() bool {
+	return flag.Lookup("test.v") != nil
+}
