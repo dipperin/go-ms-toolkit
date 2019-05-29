@@ -20,7 +20,8 @@ func Client() *raven.Client {
 	c, err := raven.New(dsn)
 	if err != nil {
 		if qyenv.GetUseDocker() == 2 {
-			panic(err)
+			log.QyLogger.Warn("init sentry client failed", zap.Error(err))
+			return c
 		} else {
 			log.QyLogger.Info("init sentry client failed", zap.Error(err))
 			return c
