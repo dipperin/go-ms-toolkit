@@ -15,15 +15,15 @@ func Test_newGormMysql(t *testing.T) {
 
 	assert.NotNil(t, gm)
 
-	gm.CreateDB()
-	gm.GetUtilDB()
+	CreateDB()
+	GetUtilDB()
 
 	gm2 := newGormMysql(conf, false)
 	assert.NotNil(t, gm2)
 
-	assert.NotNil(t, gm2.GetDB())
+	assert.NotNil(t, GetDB())
 
-	gm2.ClearAllData()
+	ClearAllData()
 
-	gm.DropDB()
+	DropDB()
 }

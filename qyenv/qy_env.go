@@ -51,3 +51,8 @@ func GetRunEnv() string {
 func IsUnitTestEnv() bool {
 	return flag.Lookup("test.v") != nil
 }
+
+// 获取产品名，用于：1. 区分数据库名称
+func GetProductName() string {
+	return os.Getenv("product")
+}

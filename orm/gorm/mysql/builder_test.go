@@ -21,10 +21,10 @@ func TestMakeDB(t *testing.T) {
 	utilDB := MakeDBUtil(conf)
 	assert.NotNil(t, utilDB)
 
-	utilDB.CreateDB()
+	CreateDB()
 
 	db := MakeDB(conf)
 	assert.NotNil(t, db)
 
-	utilDB.DropDB()
+	DropDB()
 }
