@@ -12,18 +12,13 @@ func Test_newGormMysql(t *testing.T) {
 	conf.DbName = "hahaha_test"
 
 	gm := newGormMysql(conf, true)
-
 	assert.NotNil(t, gm)
-
-	CreateDB()
-	GetUtilDB()
+	gm.CreateDB()
+	gm.GetUtilDB()
+	defer gm.DropDB()
 
 	gm2 := newGormMysql(conf, false)
 	assert.NotNil(t, gm2)
-
-	assert.NotNil(t, GetDB())
-
-	ClearAllData()
-
-	DropDB()
+	assert.NotNil(t, gm2.GetDB())
+	gm2.ClearAllData()
 }
