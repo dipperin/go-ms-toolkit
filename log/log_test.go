@@ -24,9 +24,16 @@ func TestInitLogger(t *testing.T) {
 	tst1 := &Tst{A: "fff", Number: 44, Time: time.Now()}
 	QyLogger.Debug("test debug log struct", zap.Any("tst", tst1))
 
-	InitLogger(zap.DebugLevel, "", "", true)
+	InitLogger(zap.DebugLevel, "/Users/15ho/project/go-ms-toolkit/tmp", "test.log", true)
 
-	QyLogger.Debug("aaaa")
+	QyLogger.Debug("ddddddd")
+
+	QyLogger.Info("iiiiiiiiii")
+
+	QyLogger.Warn("wwwwwwwwwww")
+
+	QyLogger.Error("eeeeeee")
+
 	LoggerEnd()
 }
 
@@ -35,11 +42,17 @@ func TestLoggerEnd(t *testing.T) {
 
 	QyLogger.Debug("aaaa")
 
+	QyLogger.Error("zzzzzzzzzzzz")
+
 	LoggerEnd()
 }
 
-func Test_newLogConfig(t *testing.T) {
-	assert.NotNil(t, newLogConfig(zap.DebugLevel, "/tmp", "", true))
+func Test_newLogCore(t *testing.T) {
+	assert.NotNil(t, newLogCore(zap.DebugLevel, "/tmp", "", true))
+}
+
+func Test_newLogOptions(t *testing.T) {
+	assert.True(t, 1 == len(newLogOptions()))
 }
 
 func Test_getOutPaths(t *testing.T) {
