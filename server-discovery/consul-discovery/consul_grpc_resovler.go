@@ -17,10 +17,10 @@ const (
 )
 
 func InitConsulGRPCResolver() {
-	resolver.Register(NewBuilder())
+	resolver.Register(newBuilder())
 }
 
-func NewBuilder() resolver.Builder {
+func newBuilder() resolver.Builder {
 	return &consulBuilder{}
 }
 
