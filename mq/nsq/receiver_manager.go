@@ -8,6 +8,12 @@ type NsqHandler interface {
 	GenTask() (topic, channel string, handler nsq.HandlerFunc)
 }
 
+type NsqHandlerFunc func() (topic, channel string, handler nsq.HandlerFunc)
+
+func (f NsqHandlerFunc) GenTask() (topic, channel string, handler nsq.HandlerFunc) {
+	return f()
+}
+
 type ReceiverManager struct {
 	receiver MqReceiver
 }
