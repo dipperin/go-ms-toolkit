@@ -19,9 +19,9 @@ type testNsqHandler struct {
 
 }
 
-func (*testNsqHandler) GenTask() (topic, channel string, handler nsq.HandlerFunc) {
+func (*testNsqHandler) GenTask() (topic, channel string, handler nsq.HandlerFunc, host *MqHostConfigs) {
 	return "topic", "1", func(message *nsq.Message) error {
 		fmt.Println(string(message.Body))
 		return nil
-	}
+	}, nil
 }
