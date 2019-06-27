@@ -48,9 +48,11 @@ type MqHostConfigs struct {
 }
 
 type MqTaskConfigs struct {
-	topic, channel string
-	handler        nsq.HandlerFunc
-	host           *MqHostConfigs
+	Topic, Channel string
+	Handler        nsq.HandlerFunc
+	Host           *MqHostConfigs
+	log            logger
+	logLv          nsq.LogLevel
 }
 
 type MqTask interface {
@@ -79,14 +81,15 @@ type NsqTask struct {
 }
 
 func (task *NsqTask) set(config *MqTaskConfigs) {
-	consumer, err := nsq.NewConsumer(config.topic, config.channel, nsq.NewConfig())
+	consumer, err := nsq.NewConsumer(config.Topic, config.Channel, nsq.NewConfig())
 	if err != nil {
 		task.Fatal = err
 		return
 	}
-	consumer.AddHandler(config.handler)
+	//consumer.SetLogger(config.log, config.logLv)
+	consumer.AddHandler(config.Handler)
 	task.consumer = consumer
-	task.host = config.host
+	task.host = config.Host
 }
 
 func (task *NsqTask) run() {
