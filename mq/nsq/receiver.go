@@ -86,7 +86,7 @@ func (task *NsqTask) set(config *MqTaskConfigs) {
 		task.Fatal = err
 		return
 	}
-	consumer.SetLogger(config.log, config.logLv)
+	//consumer.SetLogger(config.log, config.logLv)
 	consumer.AddHandler(config.Handler)
 	task.consumer = consumer
 	task.host = config.Host
