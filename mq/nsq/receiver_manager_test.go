@@ -10,7 +10,7 @@ func TestReceiverManager(t *testing.T) {
 	t.Skip("no run this test")
 	receiver := NewMqReceiver(&MqHostConfigs{Lookup: []string{"127.0.0.1:4161", "127.0.0.1:4162"}, Nsq: []string{"127.0.0.1:4150", "127.0.0.1:4152"}})
 	manager := NewReceiverManager(receiver)
-	manager.Add(GenTask("topic", "channel"))
+	manager.Add(GenTask("Topic", "Channel"))
 	manager.Start()
 	select {}
 }
@@ -18,9 +18,9 @@ func TestReceiverManager(t *testing.T) {
 func GenTask(topic, channel string) NsqHandlerFunc {
 	return func() (config *MqTaskConfigs) {
 		return &MqTaskConfigs{
-			topic:   topic,
-			channel: channel,
-			handler: func(message *nsq.Message) error {
+			Topic:   topic,
+			Channel: channel,
+			Handler: func(message *nsq.Message) error {
 				fmt.Println(string(message.Body))
 				return nil
 			},
@@ -55,9 +55,9 @@ type TestCreateOrder struct {
 func (*TestCreateOrder) tmp1Handler(topic, channel string) NsqHandlerFunc {
 	return func() (config *MqTaskConfigs) {
 		return &MqTaskConfigs{
-			topic:   topic,
-			channel: channel,
-			handler: func(message *nsq.Message) error {
+			Topic:   topic,
+			Channel: channel,
+			Handler: func(message *nsq.Message) error {
 				fmt.Println(string(message.Body))
 				return nil
 			},
@@ -68,9 +68,9 @@ func (*TestCreateOrder) tmp1Handler(topic, channel string) NsqHandlerFunc {
 func (*TestCreateOrder) tmp2Handler(topic, channel string) NsqHandlerFunc {
 	return func() (config *MqTaskConfigs) {
 		return &MqTaskConfigs{
-			topic:   topic,
-			channel: channel,
-			handler: func(message *nsq.Message) error {
+			Topic:   topic,
+			Channel: channel,
+			Handler: func(message *nsq.Message) error {
 				fmt.Println(string(message.Body))
 				return nil
 			},
