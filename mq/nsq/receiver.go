@@ -1,6 +1,5 @@
 package nsq
 
-
 import (
 	"github.com/nsqio/go-nsq"
 )
@@ -11,16 +10,15 @@ type MqReceiver interface {
 }
 
 type NsqReceiver struct {
-	config       *MqTaskConfigs
-	Index        int8
-	tasks        []MqTask
+	baseHost *MqHostConfigs
+	Index    int8
+	tasks    []MqTask
 }
 
-func NewMqReceiver(config *MqTaskConfigs) MqReceiver {
+func NewMqReceiver(config *MqHostConfigs) MqReceiver {
 	config.IsValid()
-	return &NsqReceiver{config: config}
+	return &NsqReceiver{baseHost: config}
 }
-
 
 func (r *NsqReceiver) AddTask(tasks ...MqTask) MqReceiver {
 	for _, task := range tasks {
@@ -34,21 +32,21 @@ func (r *NsqReceiver) Start() {
 		panic("add task first")
 	}
 	for r.Index < int8(len(r.tasks)) {
-		r.tasks[r.Index].run(r.config)
+		r.tasks[r.Index].run(r.baseHost)
 		r.Index ++
 	}
 	// 当前运行任务数量即为 r.Index
 }
 
 type MqTask interface {
-	run(config *MqTaskConfigs)
+	run(config *MqHostConfigs)
 }
 
-type MqTaskConfigs struct {
+type MqHostConfigs struct {
 	Lookup, Nsq []string
 }
 
-func (c *MqTaskConfigs) IsValid() {
+func (c *MqHostConfigs) IsValid() {
 	if c == nil {
 		panic("mqTaskConfigs is nil")
 	}
@@ -57,30 +55,43 @@ func (c *MqTaskConfigs) IsValid() {
 	}
 }
 
-func NewNsqTask(topic, channel string, h nsq.Handler) MqTask {
+func NewNsqTask(topic, channel string, h nsq.Handler, optionalHost ...*MqHostConfigs) MqTask {
 	consumer, err := nsq.NewConsumer(topic, channel, nsq.NewConfig())
 	consumer.AddHandler(h)
-	return &NsqTask{
+	task := &NsqTask{
 		consumer: consumer,
-		fatal:    err,
+		Fatal:    err,
 	}
+	if len(optionalHost) > 0 && optionalHost[0] != nil {
+		task.OptionalHost = optionalHost[0]
+	}
+	return task
 }
 
 type NsqTask struct {
-	consumer *nsq.Consumer
-	conErr   []error
-	fatal    error
+	consumer     *nsq.Consumer
+	OptionalHost *MqHostConfigs
+	ConErr       []error
+	Fatal        error
 }
 
-func (task *NsqTask) run(config *MqTaskConfigs) {
-	if task.fatal != nil {
+func (task *NsqTask) run(config *MqHostConfigs) {
+	if task.Fatal != nil {
+		return
+	}
+	if task.OptionalHost != nil {
+		if err := task.consumer.ConnectToNSQLookupds(task.OptionalHost.Lookup); err != nil {
+			task.ConErr = append(task.ConErr, err)
+		}
+		if err := task.consumer.ConnectToNSQDs(task.OptionalHost.Nsq); err != nil {
+			task.ConErr = append(task.ConErr, err)
+		}
 		return
 	}
 	if err := task.consumer.ConnectToNSQLookupds(config.Lookup); err != nil {
-		task.conErr = append(task.conErr, err)
+		task.ConErr = append(task.ConErr, err)
 	}
 	if err := task.consumer.ConnectToNSQDs(config.Nsq); err != nil {
-		task.conErr = append(task.conErr, err)
+		task.ConErr = append(task.ConErr, err)
 	}
 }
-

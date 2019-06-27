@@ -8,7 +8,7 @@ import (
 
 func TestReceiverManager(t *testing.T) {
 	t.Skip("no run this test")
-	receiver := NewMqReceiver(&MqTaskConfigs{Lookup:[]string{"127.0.0.1:4161", "127.0.0.1:4162"}, Nsq: []string{"127.0.0.1:4150", "127.0.0.1:4152"}})
+	receiver := NewMqReceiver(&MqHostConfigs{Lookup:[]string{"127.0.0.1:4161", "127.0.0.1:4162"}, Nsq: []string{"127.0.0.1:4150", "127.0.0.1:4152"}})
 	manager := NewReceiverManager(receiver)
 	manager.Add(&testNsqHandler{})
 	manager.Start()

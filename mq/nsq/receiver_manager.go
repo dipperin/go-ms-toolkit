@@ -5,12 +5,12 @@ import (
 )
 
 type NsqHandler interface {
-	GenTask() (topic, channel string, handler nsq.HandlerFunc)
+	GenTask() (topic, channel string, handler nsq.HandlerFunc, optionalHost *MqHostConfigs)
 }
 
-type NsqHandlerFunc func() (topic, channel string, handler nsq.HandlerFunc)
+type NsqHandlerFunc func() (topic, channel string, handler nsq.HandlerFunc, optionalHost *MqHostConfigs)
 
-func (f NsqHandlerFunc) GenTask() (topic, channel string, handler nsq.HandlerFunc) {
+func (f NsqHandlerFunc) GenTask() (topic, channel string, handler nsq.HandlerFunc, optionalHost *MqHostConfigs) {
 	return f()
 }
 
@@ -18,7 +18,6 @@ type ReceiverManager struct {
 	receiver MqReceiver
 }
 
-// todo, 多个receiver?
 func NewReceiverManager(receiver MqReceiver, h ...NsqHandler) *ReceiverManager {
 	rm := &ReceiverManager{ receiver: receiver }
 	rm.Add(h...)
