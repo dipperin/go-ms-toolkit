@@ -6,6 +6,7 @@ import (
 
 type MqReceiver interface {
 	AddTask(task ...MqTask) MqReceiver
+	BaseHost() (baseHost *MqHostConfigs)
 	Start()
 }
 
@@ -27,23 +28,34 @@ func (r *NsqReceiver) AddTask(tasks ...MqTask) MqReceiver {
 	return r
 }
 
-func (r *NsqReceiver) Start() {
-	if len(r.tasks) <= 0 {
-		panic("add task first")
-	}
-	for r.Index < int8(len(r.tasks)) {
-		r.tasks[r.Index].run(r.baseHost)
-		r.Index ++
-	}
-	// 当前运行任务数量即为 r.Index
+func (r *NsqReceiver) BaseHost() (baseHost *MqHostConfigs) {
+	return r.baseHost
 }
 
-type MqTask interface {
-	run(config *MqHostConfigs)
+func (r *NsqReceiver) Start() {
+	if len(r.tasks) <= 0 {
+		panic("Please add a task first")
+	}
+	for r.Index < int8(len(r.tasks)) {
+		r.tasks[r.Index].run()
+		r.Index ++
+	}
+	// current task number = r.Index
 }
 
 type MqHostConfigs struct {
 	Lookup, Nsq []string
+}
+
+type MqTaskConfigs struct {
+	topic, channel string
+	handler        nsq.HandlerFunc
+	host           *MqHostConfigs
+}
+
+type MqTask interface {
+	set(config *MqTaskConfigs)
+	run()
 }
 
 func (c *MqHostConfigs) IsValid() {
@@ -55,43 +67,42 @@ func (c *MqHostConfigs) IsValid() {
 	}
 }
 
-func NewNsqTask(topic, channel string, h nsq.Handler, optionalHost ...*MqHostConfigs) MqTask {
-	consumer, err := nsq.NewConsumer(topic, channel, nsq.NewConfig())
-	consumer.AddHandler(h)
-	task := &NsqTask{
-		consumer: consumer,
-		Fatal:    err,
-	}
-	if len(optionalHost) > 0 && optionalHost[0] != nil {
-		task.OptionalHost = optionalHost[0]
-	}
-	return task
+func NewNsqTask() MqTask {
+	return &NsqTask{}
 }
 
 type NsqTask struct {
-	consumer     *nsq.Consumer
-	OptionalHost *MqHostConfigs
-	ConErr       []error
-	Fatal        error
+	consumer *nsq.Consumer
+	host     *MqHostConfigs
+	Fatal    error
+	ConErr   []error
 }
 
-func (task *NsqTask) run(config *MqHostConfigs) {
+func (task *NsqTask) set(config *MqTaskConfigs) {
+	consumer, err := nsq.NewConsumer(config.topic, config.channel, nsq.NewConfig())
+	if err != nil {
+		task.Fatal = err
+		return
+	}
+	consumer.AddHandler(config.handler)
+	task.consumer = consumer
+	task.host = config.host
+}
+
+func (task *NsqTask) run() {
 	if task.Fatal != nil {
-		return
+		panic(task.Fatal)
 	}
-	if task.OptionalHost != nil {
-		if err := task.consumer.ConnectToNSQLookupds(task.OptionalHost.Lookup); err != nil {
+
+	for _, url := range task.host.Lookup {
+		if err := task.consumer.ConnectToNSQLookupd(url); err != nil {
 			task.ConErr = append(task.ConErr, err)
 		}
-		if err := task.consumer.ConnectToNSQDs(task.OptionalHost.Nsq); err != nil {
+	}
+
+	for _, url := range task.host.Nsq {
+		if err := task.consumer.ConnectToNSQD(url); err != nil {
 			task.ConErr = append(task.ConErr, err)
 		}
-		return
-	}
-	if err := task.consumer.ConnectToNSQLookupds(config.Lookup); err != nil {
-		task.ConErr = append(task.ConErr, err)
-	}
-	if err := task.consumer.ConnectToNSQDs(config.Nsq); err != nil {
-		task.ConErr = append(task.ConErr, err)
 	}
 }

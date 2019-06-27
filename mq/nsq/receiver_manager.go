@@ -1,16 +1,12 @@
 package nsq
 
-import (
-	"github.com/nsqio/go-nsq"
-)
-
 type NsqHandler interface {
-	GenTask() (topic, channel string, handler nsq.HandlerFunc, optionalHost *MqHostConfigs)
+	TaskConfig() (config *MqTaskConfigs)
 }
 
-type NsqHandlerFunc func() (topic, channel string, handler nsq.HandlerFunc, optionalHost *MqHostConfigs)
+type NsqHandlerFunc func() (config *MqTaskConfigs)
 
-func (f NsqHandlerFunc) GenTask() (topic, channel string, handler nsq.HandlerFunc, optionalHost *MqHostConfigs) {
+func (f NsqHandlerFunc) TaskConfig() (config *MqTaskConfigs) {
 	return f()
 }
 
@@ -26,7 +22,13 @@ func NewReceiverManager(receiver MqReceiver, h ...NsqHandler) *ReceiverManager {
 
 func (a *ReceiverManager) Add(h ...NsqHandler) {
 	for i := range h {
-		a.receiver.AddTask(NewNsqTask(h[i].GenTask()))
+		config := h[i].TaskConfig()
+		if config.host == nil { // default base host
+			config.host = a.receiver.BaseHost()
+		}
+		task := NewNsqTask()
+		task.set(config)
+		a.receiver.AddTask(task)
 	}
 }
 
