@@ -40,7 +40,8 @@ func (a *ReceiverManager) Add(h ...NsqHandler) {
 		if config.Host == nil { // default base Host
 			config.Host = a.receiver.BaseHost()
 		}
-		config.logLv = logLv
+		//config.log =
+		//config.logLv = logLv
 		task := NewNsqTask()
 		task.set(config)
 		a.receiver.AddTask(task)
