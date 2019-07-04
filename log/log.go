@@ -1,6 +1,8 @@
 package log
 
 import (
+	"fmt"
+	"github.com/natefinch/lumberjack"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"os"
@@ -39,21 +41,10 @@ func LoggerEnd() {
 // new log core
 func newLogCore(lvl zapcore.Level, targetDir, logFileName string, withConsole bool) zapcore.Core {
 	out := getOutPaths(targetDir, logFileName)
+	errOut := getErrOutPaths(targetDir, logFileName)
 	if withConsole {
 		out = append(out, "stdout")
-	}
-	if logFileName != "" {
-		logFileName = "err_" + logFileName
-	}
-	errOut := getOutPaths(targetDir, logFileName)
-	errOut = append(errOut, "stderr")
-	sink, _, err := zap.Open(out...)
-	if err != nil {
-		panic("outputPaths open err, err="+err.Error())
-	}
-	errSink, _, err := zap.Open(errOut...)
-	if err != nil {
-		panic("errOutputPaths open err, err="+err.Error())
+		errOut = append(errOut, "stderr")
 	}
 
 	eConfig := zap.NewProductionEncoderConfig()
@@ -61,13 +52,12 @@ func newLogCore(lvl zapcore.Level, targetDir, logFileName string, withConsole bo
 	eConfig.EncodeTime = zapcore.ISO8601TimeEncoder
 	consoleEncoder := zapcore.NewConsoleEncoder(eConfig)
 
-
 	return zapcore.NewTee(
-		zapcore.NewCore(consoleEncoder, sink, normalLevelEnable{flagLevel: lvl}),
-		zapcore.NewCore(consoleEncoder, errSink,
+		zapcore.NewCore(consoleEncoder, getSink(out), normalLevelEnable{flagLevel: lvl}),
+		zapcore.NewCore(consoleEncoder, getSink(errOut),
 			zap.LevelEnablerFunc(func(zl zapcore.Level) bool {
-			return zl >= zapcore.ErrorLevel
-		})),
+				return zl >= zapcore.ErrorLevel
+			})),
 	)
 }
 
@@ -76,7 +66,7 @@ type normalLevelEnable struct {
 }
 
 func (c normalLevelEnable) Enabled(lvl zapcore.Level) bool {
-	return lvl >= c.flagLevel  && lvl < zap.ErrorLevel
+	return lvl >= c.flagLevel && lvl < zap.ErrorLevel
 }
 
 func newLogOptions() []zap.Option {
@@ -93,13 +83,20 @@ func getOutPaths(targetDir, logFileName string) (out []string) {
 
 	if !pathExists(targetDir) {
 		if err := os.MkdirAll(targetDir, os.ModePerm); err != nil {
-			panic(err.Error()+"; dir="+targetDir)
+			panic(err.Error() + "; dir=" + targetDir)
 		}
 	}
 
 	out = append(out, filepath.Join(targetDir, logFileName))
 
 	return
+}
+
+func getErrOutPaths(targetDir, logFileName string) (out []string) {
+	if logFileName == "" {
+		return
+	}
+	return getOutPaths(targetDir, "err_"+logFileName)
 }
 
 // Determine if the path file exists
@@ -112,4 +109,31 @@ func pathExists(path string) bool {
 		return false
 	}
 	return false
+}
+
+func newRollingLogWriter(filename string) zapcore.WriteSyncer {
+	return zapcore.AddSync(&lumberjack.Logger{
+		Filename:   filename,
+		MaxSize:    500, // mb
+		MaxBackups: 10,
+		MaxAge:     7,
+		Compress:   true,
+	})
+}
+
+func newZapLogWriter(outputPaths []string) zapcore.WriteSyncer {
+	w, _, err := zap.Open(outputPaths...)
+	if err != nil {
+		panic(fmt.Sprintf("outputPaths open err, err=%v, outputPaths=%v", err.Error(), outputPaths))
+	}
+	return w
+}
+
+func getSink(outputPaths []string) zapcore.WriteSyncer {
+	if len(outputPaths) > 0 &&
+		outputPaths[0] != "stdout" &&
+		outputPaths[0] != "stderr" {
+		return newRollingLogWriter(outputPaths[0])
+	}
+	return newZapLogWriter(outputPaths)
 }

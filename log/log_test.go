@@ -24,8 +24,6 @@ func TestInitLogger(t *testing.T) {
 	tst1 := &Tst{A: "fff", Number: 44, Time: time.Now()}
 	QyLogger.Debug("test debug log struct", zap.Any("tst", tst1))
 
-	InitLogger(zap.DebugLevel, "/Users/15ho/project/go-ms-toolkit/tmp", "test.log", true)
-
 	QyLogger.Debug("ddddddd")
 
 	QyLogger.Info("iiiiiiiiii")
@@ -40,9 +38,9 @@ func TestInitLogger(t *testing.T) {
 func TestLoggerEnd(t *testing.T) {
 	InitLogger(zap.DebugLevel, "", "", true)
 
-	QyLogger.Debug("aaaa")
+	QyLogger.Debug("console.....dddd")
 
-	QyLogger.Error("zzzzzzzzzzzz")
+	QyLogger.Error("console.....eeee")
 
 	LoggerEnd()
 }
