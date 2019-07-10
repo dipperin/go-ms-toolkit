@@ -1,17 +1,25 @@
 package nsq
 
-import "github.com/nsqio/go-nsq"
+import (
+	"github.com/nsqio/go-nsq"
+	"log"
+	"os"
+)
 
-var log   logger
-var logLv nsq.LogLevel
+var nsqLog   logger
+var nsqLogLv nsq.LogLevel
 
 func init() {
-	//log =
-	logLv = nsq.LogLevelDebug
+	nsqLog =  log.New(os.Stderr, "", log.LstdFlags)
+	nsqLogLv = nsq.LogLevelInfo
+}
+
+func SetLog(l logger) {
+	nsqLog = l
 }
 
 func SetLogLv(lv nsq.LogLevel) {
-	logLv = lv
+	nsqLogLv = lv
 }
 
 type NsqHandler interface {
@@ -40,8 +48,6 @@ func (a *ReceiverManager) Add(h ...NsqHandler) {
 		if config.Host == nil { // default base Host
 			config.Host = a.receiver.BaseHost()
 		}
-		//config.log =
-		//config.logLv = logLv
 		task := NewNsqTask()
 		task.set(config)
 		a.receiver.AddTask(task)

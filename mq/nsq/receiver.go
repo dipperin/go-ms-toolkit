@@ -16,7 +16,7 @@ type NsqReceiver struct {
 	tasks    []MqTask
 }
 
-func NewMqReceiver(config *MqHostConfigs) MqReceiver {
+func NewNsqReceiver(config *MqHostConfigs) MqReceiver {
 	config.IsValid()
 	return &NsqReceiver{baseHost: config}
 }
@@ -38,7 +38,7 @@ func (r *NsqReceiver) Start() {
 	}
 	for r.Index < int8(len(r.tasks)) {
 		r.tasks[r.Index].run()
-		r.Index ++
+		r.Index++
 	}
 	// current task number = r.Index
 }
@@ -51,8 +51,6 @@ type MqTaskConfigs struct {
 	Topic, Channel string
 	Handler        nsq.HandlerFunc
 	Host           *MqHostConfigs
-	log            logger
-	logLv          nsq.LogLevel
 }
 
 type MqTask interface {
@@ -86,7 +84,7 @@ func (task *NsqTask) set(config *MqTaskConfigs) {
 		task.Fatal = err
 		return
 	}
-	//consumer.SetLogger(config.log, config.logLv)
+	consumer.SetLogger(nsqLog, nsqLogLv)
 	consumer.AddHandler(config.Handler)
 	task.consumer = consumer
 	task.host = config.Host
