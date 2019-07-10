@@ -17,10 +17,10 @@ func NewNsqWriter(addrs []string) *NsqWriter {
 	if len(addrs) <= 0 {
 		panic("nsq addrs length is 0")
 	}
-	return &NsqWriter{addrs: addrs}
+	return (&NsqWriter{addrs: addrs}).newProducers()
 }
 
-func (writer *NsqWriter) NewProducers() *NsqWriter {
+func (writer *NsqWriter) newProducers() *NsqWriter {
 	for _, addr := range writer.addrs {
 		writer.newProducer(addr)
 	}
