@@ -8,7 +8,8 @@ import (
 
 func TestReceiverManager(t *testing.T) {
 	t.Skip("no run this test")
-	receiver := NewMqReceiver(&MqHostConfigs{Lookup: []string{"127.0.0.1:4161", "127.0.0.1:4162"}, Nsq: []string{"127.0.0.1:4150", "127.0.0.1:4152"}})
+	SetLogLv(nsq.LogLevelError)
+	receiver := NewNsqReceiver(&MqHostConfigs{Lookup: []string{"127.0.0.1:4161", "127.0.0.1:4162"}, Nsq: []string{"127.0.0.1:4150", "127.0.0.1:4152"}})
 	manager := NewReceiverManager(receiver)
 	manager.Add(GenTask("Topic", "Channel"))
 	manager.Start()
@@ -30,7 +31,7 @@ func GenTask(topic, channel string) NsqHandlerFunc {
 
 func TestReceiverManagerWithMultipleTask(t *testing.T) {
 	t.Skip("no run this test")
-	receiver := NewMqReceiver(&MqHostConfigs{Lookup: []string{"127.0.0.1:4161", "127.0.0.1:4162"}, Nsq: []string{"127.0.0.1:4150", "127.0.0.1:4152"}})
+	receiver := NewNsqReceiver(&MqHostConfigs{Lookup: []string{"127.0.0.1:4161", "127.0.0.1:4162"}, Nsq: []string{"127.0.0.1:4150", "127.0.0.1:4152"}})
 	task := NewCreateOrder()
 	manager := NewReceiverManager(receiver)
 	manager.Add(task.tmp1Handler("1", "2"), task.tmp2Handler("3", "4"))
