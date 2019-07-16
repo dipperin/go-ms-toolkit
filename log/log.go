@@ -111,14 +111,22 @@ func pathExists(path string) bool {
 	return false
 }
 
-func newRollingLogWriter(filename string) zapcore.WriteSyncer {
-	return zapcore.AddSync(&lumberjack.Logger{
-		Filename:   filename,
+func newRollingLogWriter(outputPaths []string) zapcore.WriteSyncer {
+	rollW := zapcore.AddSync(&lumberjack.Logger{
+		Filename:   outputPaths[0],
 		MaxSize:    500, // mb
 		MaxBackups: 10,
 		MaxAge:     7,
 		Compress:   true,
 	})
+	if len(outputPaths) > 1 {
+		w, _, err := zap.Open(outputPaths[1:]...)
+		if err != nil {
+			panic(fmt.Sprintf("std open err, err=%v, outputPaths=%v", err.Error(), outputPaths))
+		}
+		rollW = zap.CombineWriteSyncers([]zapcore.WriteSyncer{rollW, w}...)
+	}
+	return rollW
 }
 
 func newZapLogWriter(outputPaths []string) zapcore.WriteSyncer {
@@ -133,7 +141,7 @@ func getSink(outputPaths []string) zapcore.WriteSyncer {
 	if len(outputPaths) > 0 &&
 		outputPaths[0] != "stdout" &&
 		outputPaths[0] != "stderr" {
-		return newRollingLogWriter(outputPaths[0])
+		return newRollingLogWriter(outputPaths)
 	}
 	return newZapLogWriter(outputPaths)
 }
