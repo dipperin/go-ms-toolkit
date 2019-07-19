@@ -47,13 +47,13 @@ func TestInitConsumer(t *testing.T) {
 
 //// 消费者
 //func startConsumer() {
-//	cfg := nsq.NewConfig()
-//	consumer, err := nsq.NewConsumer("test1", "aab", cfg)
+//	cfg := Nsq.NewConfig()
+//	consumer, err := Nsq.NewConsumer("test1", "aab", cfg)
 //	if err != nil {
 //		log.Fatal(err)
 //	}
 //	// 设置消息处理函数
-//	consumer.AddHandler(nsq.HandlerFunc(func(message *nsq.Message) error {
+//	consumer.AddHandler(Nsq.HandlerFunc(func(message *Nsq.Message) error {
 //		log.Println(string(message.Body))
 //		return nil
 //	}))
