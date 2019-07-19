@@ -40,6 +40,10 @@ func TestLoggerEnd(t *testing.T) {
 
 	QyLogger.Debug("console.....dddd")
 
+	QyLogger.Info("console.....iiii")
+
+	QyLogger.Warn("console....wwww")
+
 	QyLogger.Error("console.....eeee")
 
 	LoggerEnd()
@@ -53,13 +57,11 @@ func Test_newLogOptions(t *testing.T) {
 	assert.True(t, 1 == len(newLogOptions()))
 }
 
-func Test_getOutPaths(t *testing.T) {
-	assert.Len(t, getOutPaths("/tmp", ""), 0)
+func Test_getOutPath(t *testing.T) {
+	assert.True(t, getOutPath("/tmp", "") == "")
 
-	arr := getOutPaths("/tmp", "11.log")
-	assert.Len(t, arr, 1)
+	assert.True(t, getOutPath("/tmp", "11.log") == "/tmp/11.log")
 
-	println(arr[0])
 }
 
 func Test_pathExists(t *testing.T) {
