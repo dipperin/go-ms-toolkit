@@ -40,12 +40,8 @@ func LoggerEnd() {
 
 // new log core
 func newLogCore(lvl zapcore.Level, targetDir, logFileName string, withConsole bool) zapcore.Core {
-	out := getOutPaths(targetDir, logFileName)
-	errOut := getErrOutPaths(targetDir, logFileName)
-	if withConsole {
-		out = append(out, "stdout")
-		errOut = append(errOut, "stderr")
-	}
+	out := getOutPath(targetDir, logFileName)
+	errOut := getErrOutPath(targetDir, logFileName)
 
 	eConfig := zap.NewProductionEncoderConfig()
 	eConfig.EncodeDuration = zapcore.SecondsDurationEncoder
@@ -53,8 +49,8 @@ func newLogCore(lvl zapcore.Level, targetDir, logFileName string, withConsole bo
 	consoleEncoder := zapcore.NewConsoleEncoder(eConfig)
 
 	return zapcore.NewTee(
-		zapcore.NewCore(consoleEncoder, getSink(out), normalLevelEnable{flagLevel: lvl}),
-		zapcore.NewCore(consoleEncoder, getSink(errOut),
+		zapcore.NewCore(consoleEncoder, getOutSink(out, withConsole), normalLevelEnable{flagLevel: lvl}),
+		zapcore.NewCore(consoleEncoder, getErrOutSink(errOut, withConsole),
 			zap.LevelEnablerFunc(func(zl zapcore.Level) bool {
 				return zl >= zapcore.ErrorLevel
 			})),
@@ -75,8 +71,7 @@ func newLogOptions() []zap.Option {
 	}
 }
 
-func getOutPaths(targetDir, logFileName string) (out []string) {
-	// Returns the default if path is empty
+func getOutPath(targetDir, logFileName string) (out string) {
 	if logFileName == "" {
 		return
 	}
@@ -87,16 +82,14 @@ func getOutPaths(targetDir, logFileName string) (out []string) {
 		}
 	}
 
-	out = append(out, filepath.Join(targetDir, logFileName))
-
-	return
+	return filepath.Join(targetDir, logFileName)
 }
 
-func getErrOutPaths(targetDir, logFileName string) (out []string) {
+func getErrOutPath(targetDir, logFileName string) (out string) {
 	if logFileName == "" {
 		return
 	}
-	return getOutPaths(targetDir, "err_"+logFileName)
+	return getOutPath(targetDir, "err_"+logFileName)
 }
 
 // Determine if the path file exists
@@ -111,37 +104,31 @@ func pathExists(path string) bool {
 	return false
 }
 
-func newRollingLogWriter(outputPaths []string) zapcore.WriteSyncer {
+func getSink(outputPath string, stds []string, withConsole bool) zapcore.WriteSyncer {
+	w, _, err := zap.Open(stds...)
+	if err != nil {
+		panic(fmt.Sprintf("default: std open err, err=%v", err.Error()))
+	}
+	if outputPath == "" {
+		return w
+	}
 	rollW := zapcore.AddSync(&lumberjack.Logger{
-		Filename:   outputPaths[0],
+		Filename:   outputPath,
 		MaxSize:    500, // mb
 		MaxBackups: 10,
 		MaxAge:     7,
 		Compress:   true,
 	})
-	if len(outputPaths) > 1 {
-		w, _, err := zap.Open(outputPaths[1:]...)
-		if err != nil {
-			panic(fmt.Sprintf("std open err, err=%v, outputPaths=%v", err.Error(), outputPaths))
-		}
-		rollW = zap.CombineWriteSyncers([]zapcore.WriteSyncer{rollW, w}...)
+	if withConsole {
+		return zap.CombineWriteSyncers([]zapcore.WriteSyncer{rollW, w}...)
 	}
 	return rollW
 }
 
-func newZapLogWriter(outputPaths []string) zapcore.WriteSyncer {
-	w, _, err := zap.Open(outputPaths...)
-	if err != nil {
-		panic(fmt.Sprintf("outputPaths open err, err=%v, outputPaths=%v", err.Error(), outputPaths))
-	}
-	return w
+func getOutSink(outputPath string, withConsole bool) zapcore.WriteSyncer {
+	return getSink(outputPath, []string{"stdout"}, withConsole)
 }
 
-func getSink(outputPaths []string) zapcore.WriteSyncer {
-	if len(outputPaths) > 0 &&
-		outputPaths[0] != "stdout" &&
-		outputPaths[0] != "stderr" {
-		return newRollingLogWriter(outputPaths)
-	}
-	return newZapLogWriter(outputPaths)
+func getErrOutSink(outputPath string, withConsole bool) zapcore.WriteSyncer {
+	return getSink(outputPath, []string{"stdout", "stderr"}, withConsole)
 }
