@@ -31,6 +31,6 @@ require (
 	go.uber.org/multierr v1.1.0 // indirect
 	go.uber.org/zap v1.9.1
 	golang.org/x/crypto v0.0.0-20190313024323-a1f597ede03a // indirect
-	google.golang.org/grpc v1.19.0
+	google.golang.org/grpc v1.22.0
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0 // indirect
 )
