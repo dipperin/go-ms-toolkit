@@ -15,6 +15,7 @@ type DbConfig struct {
 	DbName       string
 	MaxIdleConns int
 	MaxOpenConns int
+	DbCharset    string
 }
 
 // 只能通过这种方式获取配置对象
@@ -35,6 +36,7 @@ func NewDbConfig() *DbConfig {
 		Port:         appConf.MysqlPort,
 		MaxIdleConns: 10,
 		MaxOpenConns: 100,
+		DbCharset:    "utf8",
 	}
 
 	name, err := ioutil.ReadFile("/usr/local/.db/mysql.uname")
