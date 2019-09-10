@@ -90,8 +90,16 @@ func (b *BatchInsertSql) getObjValuesForSql(rv reflect.Value, fields []reflect.S
 	for _, f := range fields {
 		//logger.Debug(f.Type.Kind().String())
 		//logger.Debug(f.Type.Name())
+		//fmt.Println("!!!!!!!", f.Name, f.Type.String(), f.Type.Kind())
 		// 尚未实现根据类型做适配，因此必须都是string
-		if f.Type.Kind() == reflect.Struct && strings.Contains(f.Type.Name(), "Time") {
+		if f.Type.Kind() == reflect.Struct && strings.Contains(f.Type.String(), "Time") {
+			if f.Name == "CreatedAt" || f.Name == "UpdatedAt" {
+				result += "'" + b.createdAt + "',"
+			} else {
+				result += "'" + rv.FieldByName(f.Name).Interface().(time.Time).Format("2006-01-02 15:04:05") + "',"
+			}
+			// todo, 优化这个判断
+		} else if f.Type.Kind() == reflect.Ptr && f.Type.Elem().Kind() == reflect.Struct && strings.Contains(f.Type.String(), "Time") {
 			if f.Name == "CreatedAt" || f.Name == "UpdatedAt" {
 				result += "'" + b.createdAt + "',"
 			} else {
@@ -140,7 +148,7 @@ func StrSliceContains(strs []string, str string) bool {
 
 // 迭代一个对象的所有字段名
 func EnumAnObjFieldNames(rv reflect.Type, cb func(f reflect.StructField)) {
-	if rv.Kind() == reflect.Ptr {
+	for rv.Kind() == reflect.Ptr {
 		rv = rv.Elem()
 	}
 	num := rv.NumField()
