@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/dipperin/go-ms-toolkit/db-config"
 	"github.com/dipperin/go-ms-toolkit/log"
+	"github.com/dipperin/go-ms-toolkit/qyenv"
 	"github.com/jinzhu/gorm"
 	"go.uber.org/zap"
 	"strings"
@@ -64,7 +65,7 @@ func (gm *gormMysql) GetUtilDB() *gorm.DB {
 }
 
 func (gm *gormMysql) ClearAllData() {
-	if strings.Contains(gm.dbConfig.DbName, "test") {
+	if qyenv.IsUnitTestEnv() && strings.Contains(gm.dbConfig.DbName, "test") {
 		tmpDb := gm.db
 		if tmpDb == nil {
 			panic("尚未初始化数据库, 清空数据库失败")
