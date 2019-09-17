@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/dipperin/go-ms-toolkit/db-config"
 	"github.com/dipperin/go-ms-toolkit/log"
+	"github.com/dipperin/go-ms-toolkit/qyenv"
 	"github.com/jinzhu/gorm"
 	"go.uber.org/zap"
 	"strings"
@@ -64,7 +65,7 @@ func (gm *gormMysql) GetUtilDB() *gorm.DB {
 }
 
 func (gm *gormMysql) ClearAllData() {
-	if strings.Contains(gm.dbConfig.DbName, "test") {
+	if qyenv.IsUnitTestEnv() && strings.Contains(gm.dbConfig.DbName, "test") {
 		tmpDb := gm.db
 		if tmpDb == nil {
 			panic("尚未初始化数据库, 清空数据库失败")
@@ -110,7 +111,7 @@ func (gm *gormMysql) initGormDB() {
 	log.QyLogger.Info("init db connection: ", zap.String("db_host", gm.dbConfig.Host),
 		zap.String("db_name", gm.dbConfig.DbName), zap.String("user", gm.dbConfig.Username))
 
-	openedDb, err := gorm.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8&parseTime=True&loc=Local", gm.dbConfig.Username, gm.dbConfig.Password, gm.dbConfig.Host, gm.dbConfig.Port, gm.dbConfig.DbName))
+	openedDb, err := gorm.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=%s&parseTime=True&loc=Local", gm.dbConfig.Username, gm.dbConfig.Password, gm.dbConfig.Host, gm.dbConfig.Port, gm.dbConfig.DbName, gm.dbConfig.DbCharset))
 	if err != nil {
 		panic("数据库连接出错：" + err.Error())
 	}
@@ -132,7 +133,7 @@ func (gm *gormMysql) initCdDb() {
 		panic("gorm db should nil")
 	}
 
-	cStr := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8&parseTime=True&loc=Local", gm.dbConfig.Username, gm.dbConfig.Password, gm.dbConfig.Host, gm.dbConfig.Port, "information_schema")
+	cStr := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=%s&parseTime=True&loc=Local", gm.dbConfig.Username, gm.dbConfig.Password, gm.dbConfig.Host, gm.dbConfig.Port, "information_schema", gm.dbConfig.DbCharset)
 	openedDb, err := gorm.Open("mysql", cStr)
 	if err != nil {
 		fmt.Println(cStr)
