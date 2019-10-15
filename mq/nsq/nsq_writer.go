@@ -8,19 +8,25 @@ import (
 	"go.uber.org/zap"
 )
 
-type NsqWriter struct {
+type NsqWriter interface {
+	Refresh()
+	Publish(topic string, jsonObj interface{}) error
+	PublishString(topic string, msg string) error
+}
+
+type BaseNsqWriter struct {
 	addrs     []string
 	producers []*nsq.Producer
 }
 
-func NewNsqWriter(addrs []string) *NsqWriter {
+func NewNsqWriter(addrs []string) NsqWriter {
 	if len(addrs) <= 0 {
 		panic("nsq addrs length is 0")
 	}
-	return (&NsqWriter{addrs: addrs}).newProducers()
+	return (&BaseNsqWriter{addrs: addrs}).newProducers()
 }
 
-func (writer *NsqWriter) newProducers() *NsqWriter {
+func (writer *BaseNsqWriter) newProducers() NsqWriter {
 	for _, addr := range writer.addrs {
 		writer.newProducer(addr)
 	}
@@ -31,7 +37,7 @@ func (writer *NsqWriter) newProducers() *NsqWriter {
 	return writer
 }
 
-func (writer *NsqWriter) Refresh() {
+func (writer *BaseNsqWriter) Refresh() {
 	refreshed := writer.refreshProducer()
 	if len(refreshed) > 0 {
 		writer.producers = nil
@@ -39,21 +45,21 @@ func (writer *NsqWriter) Refresh() {
 	}
 }
 
-func (writer *NsqWriter) Publish(topic string, jsonObj interface{}) error {
+func (writer *BaseNsqWriter) Publish(topic string, jsonObj interface{}) error {
 	if len(writer.producers) <= 0 {
 		return errors.New("no producer on topic: '" + topic + "'")
 	}
 	return writer.pubMsg(topic, json.StringifyJsonToBytes(jsonObj))
 }
 
-func (writer *NsqWriter) PublishString(topic string, msg string) error {
+func (writer *BaseNsqWriter) PublishString(topic string, msg string) error {
 	if len(writer.producers) <= 0 {
 		return errors.New("no producer on topic: '" + topic + "'")
 	}
 	return writer.pubMsg(topic, []byte(msg))
 }
 
-func (writer *NsqWriter) newProducer(addr string) {
+func (writer *BaseNsqWriter) newProducer(addr string) {
 	producer, err := nsq.NewProducer(addr, nsq.NewConfig())
 
 	if err != nil {
@@ -70,7 +76,7 @@ func (writer *NsqWriter) newProducer(addr string) {
 	writer.producers = append(writer.producers, producer)
 }
 
-func (writer *NsqWriter) refreshProducer() (refreshedProducers []*nsq.Producer) {
+func (writer *BaseNsqWriter) refreshProducer() (refreshedProducers []*nsq.Producer) {
 	for _, addr := range writer.addrs {
 		producer, err := nsq.NewProducer(addr, nsq.NewConfig())
 
@@ -90,7 +96,7 @@ func (writer *NsqWriter) refreshProducer() (refreshedProducers []*nsq.Producer) 
 	return
 }
 
-func (writer *NsqWriter) pubMsg(topic string, msg []byte) error {
+func (writer *BaseNsqWriter) pubMsg(topic string, msg []byte) error {
 
 	// todo, 随机取
 	for i := range writer.producers {
