@@ -16,6 +16,16 @@ func TestReceiverManager(t *testing.T) {
 	select {}
 }
 
+func TestReceiverManagerNoLookup(t *testing.T) {
+	t.Skip("no run this test")
+	SetLogLv(nsq.LogLevelError)
+	receiver := NewNsqReceiver(&MqHostConfigs{Nsq: []string{"127.0.0.1:4150", "127.0.0.1:4152"}})
+	manager := NewReceiverManager(receiver)
+	manager.Add(GenTask("Topic", "Channel"))
+	manager.Start()
+	select {}
+}
+
 func GenTask(topic, channel string) NsqHandlerFunc {
 	return func() (config *MqTaskConfigs) {
 		return &MqTaskConfigs{
