@@ -51,7 +51,7 @@ func (r *NsqReceiver) Start() {
 		r.tasks[r.Index].run()
 		// if not connected, retry every 5 min
 		if !r.tasks[r.Index].connected() {
-			go r.retry(r.Index, 5 * time.Minute)
+			go r.retry(r.Index, 5*time.Minute)
 		}
 		r.Index++
 	}
@@ -124,10 +124,14 @@ func (task *NsqTask) run() {
 }
 
 func (task *NsqTask) connected() bool {
+	totalSetups := len(task.host.Lookup) + len(task.host.Nsq)
+	if len(task.ConErr) < totalSetups || totalSetups == 0 {
+		return true
+	}
 	for _, err := range task.ConErr {
-		if err != nil {
-			return false
+		if err == nil {
+			return true
 		}
 	}
-	return true
+	return false
 }
