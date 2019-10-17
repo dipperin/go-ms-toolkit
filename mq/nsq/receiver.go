@@ -109,6 +109,7 @@ func (task *NsqTask) run() {
 	if task.Fatal != nil {
 		panic(task.Fatal)
 	}
+	task.ConErr = nil
 
 	for _, url := range task.host.Lookup {
 		if err := task.consumer.ConnectToNSQLookupd(url); err != nil {
