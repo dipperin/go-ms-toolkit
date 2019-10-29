@@ -1,7 +1,9 @@
 package nsq
 
 import (
+	"fmt"
 	"github.com/nsqio/go-nsq"
+	"time"
 )
 
 type MqReceiver interface {
@@ -12,7 +14,7 @@ type MqReceiver interface {
 
 type NsqReceiver struct {
 	baseHost *MqHostConfigs
-	Index    int8
+	Index    uint32
 	tasks    []MqTask
 }
 
@@ -32,15 +34,27 @@ func (r *NsqReceiver) BaseHost() (baseHost *MqHostConfigs) {
 	return r.baseHost
 }
 
+func (r *NsqReceiver) retry(index uint32, duration time.Duration) {
+	for !r.tasks[index].connected() {
+		fmt.Println(fmt.Sprintf("task[%d] not connected, retry after %v", index, duration))
+		time.Sleep(duration)
+		r.tasks[index].run()
+	}
+	fmt.Println(fmt.Sprintf("retry for task[%d] success", index))
+}
+
 func (r *NsqReceiver) Start() {
 	if len(r.tasks) <= 0 {
 		panic("Please add a task first")
 	}
-	for r.Index < int8(len(r.tasks)) {
+	for r.Index < uint32(len(r.tasks)) {
 		r.tasks[r.Index].run()
+		// if not connected, retry every 5 min
+		if !r.tasks[r.Index].connected() {
+			go r.retry(r.Index, 5*time.Minute)
+		}
 		r.Index++
 	}
-	// current task number = r.Index
 }
 
 type MqHostConfigs struct {
@@ -56,6 +70,7 @@ type MqTaskConfigs struct {
 type MqTask interface {
 	set(config *MqTaskConfigs)
 	run()
+	connected() bool
 }
 
 func (c *MqHostConfigs) IsValid() {
@@ -94,6 +109,7 @@ func (task *NsqTask) run() {
 	if task.Fatal != nil {
 		panic(task.Fatal)
 	}
+	task.ConErr = nil
 
 	for _, url := range task.host.Lookup {
 		if err := task.consumer.ConnectToNSQLookupd(url); err != nil {
@@ -106,4 +122,17 @@ func (task *NsqTask) run() {
 			task.ConErr = append(task.ConErr, err)
 		}
 	}
+}
+
+func (task *NsqTask) connected() bool {
+	totalSetups := len(task.host.Lookup) + len(task.host.Nsq)
+	if len(task.ConErr) < totalSetups || totalSetups == 0 {
+		return true
+	}
+	for _, err := range task.ConErr {
+		if err == nil {
+			return true
+		}
+	}
+	return false
 }
