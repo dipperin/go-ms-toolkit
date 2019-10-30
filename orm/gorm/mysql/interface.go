@@ -11,4 +11,5 @@ type DBUtil interface {
 type DB interface {
 	GetDB() *gorm.DB
 	ClearAllData()
+	Create(value interface{}) error
 }
