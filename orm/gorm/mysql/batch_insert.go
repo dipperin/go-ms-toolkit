@@ -2,10 +2,11 @@ package mysql
 
 import (
 	"fmt"
-	"github.com/jinzhu/gorm"
 	"reflect"
 	"strings"
 	"time"
+
+	"github.com/jinzhu/gorm"
 )
 
 var flowIgnoreFields = []string{"Wall", "Ext", "Loc", "wall", "ext", "loc", "ID", "Id", "DeletedAt"}
@@ -88,9 +89,9 @@ func getInsertFieldStr(rt reflect.Type, ignoreFs []string) (fieldNames []reflect
 func (b *BatchInsertSql) getObjValuesForSql(rv reflect.Value, fields []reflect.StructField) (result string) {
 	result = "("
 	for _, f := range fields {
-		//logger.Debug(f.Type.Kind().String())
-		//logger.Debug(f.Type.Name())
-		//fmt.Println("!!!!!!!", f.Name, f.Type.String(), f.Type.Kind())
+		// logger.Debug(f.Type.Kind().String())
+		// logger.Debug(f.Type.Name())
+		// fmt.Println("!!!!!!!", f.Name, f.Type.String(), f.Type.Kind())
 		// 尚未实现根据类型做适配，因此必须都是string
 		if f.Type.Kind() == reflect.Struct && strings.Contains(f.Type.String(), "Time") {
 			if f.Name == "CreatedAt" || f.Name == "UpdatedAt" {
@@ -103,7 +104,12 @@ func (b *BatchInsertSql) getObjValuesForSql(rv reflect.Value, fields []reflect.S
 			if f.Name == "CreatedAt" || f.Name == "UpdatedAt" {
 				result += "'" + b.createdAt + "',"
 			} else {
-				result += "'" + rv.FieldByName(f.Name).Interface().(time.Time).Format("2006-01-02 15:04:05") + "',"
+				t := rv.FieldByName(f.Name).Interface().(*time.Time)
+				if t == nil {
+					result += "NULL,"
+				} else {
+					result += "'" + t.Format("2006-01-02 15:04:05") + "',"
+				}
 			}
 		} else if f.Type.Kind() == reflect.String {
 			result += "'" + ClearData4str(rv.FieldByName(f.Name).String()) + "',"
@@ -135,7 +141,6 @@ func ClearData4str(str string) string {
 	return str
 }
 
-
 // 看一个数组中是否含有某个元素
 func StrSliceContains(strs []string, str string) bool {
 	for _, s := range strs {
@@ -164,4 +169,3 @@ func EnumAnObjFieldNames(rv reflect.Type, cb func(f reflect.StructField)) {
 
 	}
 }
-

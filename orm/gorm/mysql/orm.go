@@ -2,13 +2,16 @@ package mysql
 
 import (
 	"fmt"
+	"reflect"
+	"strings"
+	"time"
+
+	"github.com/jinzhu/gorm"
+	"go.uber.org/zap"
+
 	"github.com/dipperin/go-ms-toolkit/db-config"
 	"github.com/dipperin/go-ms-toolkit/log"
 	"github.com/dipperin/go-ms-toolkit/qyenv"
-	"github.com/jinzhu/gorm"
-	"go.uber.org/zap"
-	"strings"
-	"time"
 )
 
 type gormMysql struct {
@@ -56,7 +59,7 @@ func (gm *gormMysql) GetUtilDB() *gorm.DB {
 	// 避免久了不使用，导致连接被mysql断掉的问题
 	openedDb.DB().SetConnMaxLifetime(time.Hour * 2)
 	// 如果不是生产数据库则打开详细日志
-	//if !strings.Contains(dbConfig.DbName, "prod") {
+	// if !strings.Contains(dbConfig.DbName, "prod") {
 	if substr(gm.dbConfig.DbName, len(gm.dbConfig.DbName)-4, 4) != "prod" {
 		openedDb.LogMode(true)
 	}
@@ -87,6 +90,23 @@ func (gm *gormMysql) ClearAllData() {
 	} else {
 		panic("非法操作！在非测试环境下调用了清空所有数据的方法")
 	}
+}
+
+func (gm *gormMysql) Create(value interface{}) error {
+	if kind := reflect.TypeOf(value).Kind(); kind != reflect.Slice {
+		return gm.GetDB().Create(value).Error
+	}
+	slice := reflect.ValueOf(value)
+	if slice.Len() == 0 {
+		return nil
+	}
+
+	tableName := gm.GetDB().NewScope(slice.Index(0).Interface()).TableName()
+	batch := NewBatchInsertSql(tableName)
+	for i := 0; i < slice.Len(); i++ {
+		batch.Add(slice.Index(i).Interface())
+	}
+	return gm.GetDB().Exec(batch.ResultSql()).Error
 }
 
 func newGormMysql(dbConfig *db_config.DbConfig, forUtil bool) *gormMysql {
@@ -120,7 +140,7 @@ func (gm *gormMysql) initGormDB() {
 	// 避免久了不使用，导致连接被mysql断掉的问题
 	openedDb.DB().SetConnMaxLifetime(time.Hour * 2)
 	// 如果不是生产数据库则打开详细日志
-	//if !strings.Contains(dbConfig.DbName, "prod") {
+	// if !strings.Contains(dbConfig.DbName, "prod") {
 	if substr(gm.dbConfig.DbName, len(gm.dbConfig.DbName)-4, 4) != "prod" {
 		openedDb.LogMode(true)
 	}
