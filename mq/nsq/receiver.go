@@ -2,14 +2,16 @@ package nsq
 
 import (
 	"fmt"
-	"github.com/nsqio/go-nsq"
 	"time"
+
+	"github.com/nsqio/go-nsq"
 )
 
 type MqReceiver interface {
 	AddTask(task ...MqTask) MqReceiver
 	BaseHost() (baseHost *MqHostConfigs)
 	Start()
+	Stop()
 }
 
 type NsqReceiver struct {
@@ -57,6 +59,12 @@ func (r *NsqReceiver) Start() {
 	}
 }
 
+func (r *NsqReceiver) Stop() {
+	for _, task := range r.tasks {
+		task.stop()
+	}
+}
+
 type MqHostConfigs struct {
 	Lookup, Nsq []string
 }
@@ -71,6 +79,7 @@ type MqTask interface {
 	set(config *MqTaskConfigs)
 	run()
 	connected() bool
+	stop()
 }
 
 func (c *MqHostConfigs) IsValid() {
@@ -135,4 +144,8 @@ func (task *NsqTask) connected() bool {
 		}
 	}
 	return false
+}
+
+func (task *NsqTask) stop() {
+	task.consumer.Stop()
 }

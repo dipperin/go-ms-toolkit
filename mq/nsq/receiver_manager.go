@@ -57,3 +57,7 @@ func (a *ReceiverManager) Add(h ...NsqHandler) {
 func (a *ReceiverManager) Start() {
 	a.receiver.Start()
 }
+
+func (a *ReceiverManager) Stop() {
+	a.receiver.Stop()
+}
