@@ -2,6 +2,7 @@ package nsq
 
 import (
 	"errors"
+
 	"github.com/dipperin/go-ms-toolkit/json"
 	qylog "github.com/dipperin/go-ms-toolkit/log"
 	"github.com/nsqio/go-nsq"
@@ -12,6 +13,7 @@ type NsqWriter interface {
 	Refresh()
 	Publish(topic string, jsonObj interface{}) error
 	PublishString(topic string, msg string) error
+	Stop()
 }
 
 type BaseNsqWriter struct {
@@ -35,6 +37,12 @@ func (writer *BaseNsqWriter) newProducers() NsqWriter {
 		panic("NsqWriter.producers length is 0")
 	}
 	return writer
+}
+
+func (writer *BaseNsqWriter) Stop() {
+	for _, producer := range writer.producers {
+		producer.Stop()
+	}
 }
 
 func (writer *BaseNsqWriter) Refresh() {

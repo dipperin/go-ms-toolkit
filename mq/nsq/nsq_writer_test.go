@@ -12,4 +12,5 @@ func TestNsqWriter(t *testing.T) {
 	assert.NoError(t, err)
 	err = writer.Publish("topic2", []string{"sssss", "heiheihei"})
 	assert.NoError(t, err)
+	writer.Stop()
 }
