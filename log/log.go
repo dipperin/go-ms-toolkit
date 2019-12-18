@@ -27,12 +27,24 @@ func init() {
 }
 
 // init logger
-func InitLogger(lvl zapcore.Level, targetDir, logFileName string, withConsole bool) {
+func InitLoggerWithCaller(lvl zapcore.Level, targetDir, logFileName string, withConsole bool) {
+
+	opts := newLogOptions()
+	opts = append(opts, zap.AddCaller())
 
 	//  caller
-
 	QyLogger = zap.New(
-		newLogCore(lvl, targetDir, logFileName, withConsole),
+		newLogCore(lvl, targetDir, logFileName, withConsole, true),
+		opts...,
+	)
+
+	//QyLogger = QyLogger.With(zap.String("caller", printMyName()))
+}
+
+// init logger
+func InitLogger(lvl zapcore.Level, targetDir, logFileName string, withConsole bool) {
+	QyLogger = zap.New(
+		newLogCore(lvl, targetDir, logFileName, withConsole, false),
 		newLogOptions()...,
 	)
 
@@ -48,14 +60,17 @@ func LoggerEnd() {
 }
 
 // new log core
-func newLogCore(lvl zapcore.Level, targetDir, logFileName string, withConsole bool) zapcore.Core {
+func newLogCore(lvl zapcore.Level, targetDir, logFileName string, withConsole bool, withCaller bool) zapcore.Core {
 	out := getOutPath(targetDir, logFileName)
 	errOut := getErrOutPath(targetDir, logFileName)
 
 	eConfig := zap.NewProductionEncoderConfig()
 	eConfig.EncodeDuration = zapcore.SecondsDurationEncoder
 	eConfig.EncodeTime = zapcore.ISO8601TimeEncoder
-	eConfig.EncodeCaller = qyCallerEncoder
+
+	if withCaller {
+		eConfig.EncodeCaller = qyCallerEncoder
+	}
 
 	consoleEncoder := zapcore.NewConsoleEncoder(eConfig)
 
@@ -79,7 +94,6 @@ func (c normalLevelEnable) Enabled(lvl zapcore.Level) bool {
 func newLogOptions() []zap.Option {
 	return []zap.Option{
 		zap.AddStacktrace(zapcore.ErrorLevel),
-		zap.AddCaller(),
 	}
 }
 
@@ -146,8 +160,7 @@ func getErrOutSink(outputPath string, withConsole bool) zapcore.WriteSyncer {
 }
 
 func qyCallerEncoder(caller zapcore.EntryCaller, enc zapcore.PrimitiveArrayEncoder) {
-	enc.AppendString(printHostName())
-	enc.AppendString(printMyName())
+	enc.AppendString(printHostName() + "	" + printMyName())
 }
 
 var hostName string
