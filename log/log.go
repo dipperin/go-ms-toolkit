@@ -11,6 +11,7 @@ import (
 	"runtime"
 	"strconv"
 	"sync"
+	"time"
 )
 
 var QyLogger *zap.Logger
@@ -66,7 +67,7 @@ func newLogCore(lvl zapcore.Level, targetDir, logFileName string, withConsole bo
 
 	eConfig := zap.NewProductionEncoderConfig()
 	eConfig.EncodeDuration = zapcore.SecondsDurationEncoder
-	eConfig.EncodeTime = zapcore.ISO8601TimeEncoder
+	eConfig.EncodeTime = qyTimeEncoder
 
 	if withCaller {
 		eConfig.EncodeCaller = qyCallerEncoder
@@ -157,6 +158,10 @@ func getOutSink(outputPath string, withConsole bool) zapcore.WriteSyncer {
 
 func getErrOutSink(outputPath string, withConsole bool) zapcore.WriteSyncer {
 	return getSink(outputPath, []string{"stdout", "stderr"}, withConsole)
+}
+
+func qyTimeEncoder(t time.Time, enc zapcore.PrimitiveArrayEncoder) {
+	enc.AppendString(t.Format("2006-01-02 15:04:05.000"))
 }
 
 func qyCallerEncoder(caller zapcore.EntryCaller, enc zapcore.PrimitiveArrayEncoder) {

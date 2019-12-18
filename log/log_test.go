@@ -72,7 +72,7 @@ func Test_pathExists(t *testing.T) {
 }
 
 func TestTrace(t *testing.T) {
-	InitLogger(zap.DebugLevel, "", "", true)
+	InitLoggerWithCaller(zap.DebugLevel, "", "", true)
 
 	QyLogger.Info("aaaaaaa")
 
