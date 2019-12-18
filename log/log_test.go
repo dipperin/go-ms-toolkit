@@ -70,3 +70,13 @@ func Test_pathExists(t *testing.T) {
 	assert.Equal(t, true, pathExists(usr.HomeDir))
 	assert.Equal(t, false, pathExists("fdsafds"))
 }
+
+func TestTrace(t *testing.T) {
+	InitLogger(zap.DebugLevel, "", "", true)
+
+	QyLogger.Info("aaaaaaa")
+
+	//fmt.Println(printMyName())
+
+	//QyLogger.Named()
+}

@@ -2,11 +2,15 @@ package log
 
 import (
 	"fmt"
+	"github.com/dipperin/go-ms-toolkit/qyenv"
 	"github.com/natefinch/lumberjack"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"os"
 	"path/filepath"
+	"runtime"
+	"strconv"
+	"sync"
 )
 
 var QyLogger *zap.Logger
@@ -24,10 +28,15 @@ func init() {
 
 // init logger
 func InitLogger(lvl zapcore.Level, targetDir, logFileName string, withConsole bool) {
+
+	//  caller
+
 	QyLogger = zap.New(
 		newLogCore(lvl, targetDir, logFileName, withConsole),
 		newLogOptions()...,
 	)
+
+	//QyLogger = QyLogger.With(zap.String("caller", printMyName()))
 }
 
 func LoggerEnd() {
@@ -46,6 +55,8 @@ func newLogCore(lvl zapcore.Level, targetDir, logFileName string, withConsole bo
 	eConfig := zap.NewProductionEncoderConfig()
 	eConfig.EncodeDuration = zapcore.SecondsDurationEncoder
 	eConfig.EncodeTime = zapcore.ISO8601TimeEncoder
+	eConfig.EncodeCaller = qyCallerEncoder
+
 	consoleEncoder := zapcore.NewConsoleEncoder(eConfig)
 
 	return zapcore.NewTee(
@@ -68,6 +79,7 @@ func (c normalLevelEnable) Enabled(lvl zapcore.Level) bool {
 func newLogOptions() []zap.Option {
 	return []zap.Option{
 		zap.AddStacktrace(zapcore.ErrorLevel),
+		zap.AddCaller(),
 	}
 }
 
@@ -131,4 +143,33 @@ func getOutSink(outputPath string, withConsole bool) zapcore.WriteSyncer {
 
 func getErrOutSink(outputPath string, withConsole bool) zapcore.WriteSyncer {
 	return getSink(outputPath, []string{"stdout", "stderr"}, withConsole)
+}
+
+func qyCallerEncoder(caller zapcore.EntryCaller, enc zapcore.PrimitiveArrayEncoder) {
+	enc.AppendString(printHostName())
+	enc.AppendString(printMyName())
+}
+
+var hostName string
+var once sync.Once
+
+func printHostName() string {
+	once.Do(func() {
+		if qyenv.GetDockerEnv() == "0" || qyenv.GetDockerEnv() == "" {
+			hostName = "local"
+		} else {
+			hostName = os.Getenv("HOSTNAME")
+		}
+	})
+
+	return hostName
+}
+
+// 打印 调用者
+func printMyName() string {
+	if pc, _, lineNo, ok := runtime.Caller(6); ok {
+		return runtime.FuncForPC(pc).Name() + ":" + strconv.FormatInt(int64(lineNo), 10)
+	}
+
+	return ""
 }
