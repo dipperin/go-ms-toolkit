@@ -94,8 +94,8 @@ func GetAppDefaultConf() *AppConfig {
 // 获取容器中的配置
 func GetDevDockerConf() *AppConfig {
 	return &AppConfig{
-		RedisUrl:       "redis-master:6379",
-		MysqlHost:      "qy-mysql",
+		RedisUrl:       "redis-master.default.svc.cluster.local:6379",
+		MysqlHost:      "qy-mysql.default.svc.cluster.local",
 		MysqlPort:      "3306",
 		MysqlUname:     "qy",
 		HttpServerPort: "3000",
@@ -113,8 +113,8 @@ func GetProdDockerConf() *AppConfig {
 		uname = strings.TrimSpace(string(data))
 	}
 	return &AppConfig{
-		RedisUrl:       "redis-master:6379",
-		MysqlHost:      "qy-mysql",
+		RedisUrl:       "redis-master.default.svc.cluster.local:6379",
+		MysqlHost:      "qy-mysql.default.svc.cluster.local",
 		MysqlPort:      "3306",
 		MysqlUname:     uname,
 		HttpServerPort: "3000",
