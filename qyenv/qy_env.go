@@ -56,3 +56,8 @@ func IsUnitTestEnv() bool {
 func GetProductName() string {
 	return os.Getenv("product")
 }
+
+// 获取蓝绿配置，用于：1. 区分部署版本
+func GetDeployName() string {
+	return os.Getenv("deploy_env")
+}
