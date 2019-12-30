@@ -7,7 +7,7 @@ import (
 )
 
 var pong gin.HandlerFunc = func(c *gin.Context) {
-	c.JSON(http.StatusOK, "pong")
+	c.JSON(http.StatusOK, "OK")
 }
 
 // server has gin Engine

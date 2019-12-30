@@ -60,7 +60,7 @@ func RegisterHealthCheckWithGin(grpcPort string, engine *gin.Engine) {
 			return
 		}
 
-		c.JSON(http.StatusOK, "pong")
+		c.JSON(http.StatusOK, "OK")
 	}
 
 	engine.POST(config.HealthCheckRoute, pong)
