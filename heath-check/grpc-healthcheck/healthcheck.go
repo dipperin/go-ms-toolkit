@@ -11,6 +11,8 @@ import (
 	"net/http"
 )
 
+// 这个是在开启grpc health check， 本身grpc 就支持健康检查协议， 如果k8s能直接调同的话 use grpc_health_probe
+// 那就只用调用这个方法就好了
 func RegisterHealthCheck(server *grpc.Server) {
 	// register health check for grpc
 	grpc_health_v1.RegisterHealthServer(server, &healthCheckGRPCServerImpl{})
@@ -20,6 +22,11 @@ var (
 	healthClient grpc_health_v1.HealthClient
 )
 
+// 这是一个wrap 方法， 开启一个gin，可以同http的方法去调用grpc的健康检查，注意： 必须启动完grpc server 后才能调用
+// 先决条件：
+// 1. 开启了grpc health check, 已经调用了 RegisterHealthCheck
+// 2. grpc server 已经Serve起来了
+// 如果不遵循先决条件，可能会panic
 func RegisterHealthCheckWithGin(grpcPort string, engine *gin.Engine) {
 	conn, err := grpc.Dial("localhost:"+grpcPort, grpc.WithInsecure())
 	if err != nil {

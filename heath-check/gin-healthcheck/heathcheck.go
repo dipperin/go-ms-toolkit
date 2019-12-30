@@ -11,6 +11,7 @@ var pong gin.HandlerFunc = func(c *gin.Context) {
 }
 
 // server has gin Engine
+// 如果本身server是gin的话， 只需要把 engine丢进来， 注意不要带入gin middleware（类似鉴权的）
 func RegisterHealthCheck(engine *gin.Engine) {
 	engine.POST(config.HealthCheckRoute, pong)
 	engine.GET(config.HealthCheckRoute, pong)
