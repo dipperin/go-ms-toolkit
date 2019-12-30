@@ -6,6 +6,10 @@ import (
 
 type maskImpl struct{}
 
+func newMaskImpl() *maskImpl {
+	return &maskImpl{}
+}
+
 // 判断长度，大于3时，掩码前3位，小于3不脱敏
 func (m *maskImpl) LastName(data string) string {
 	if len(data) <= 3 {
@@ -16,7 +20,7 @@ func (m *maskImpl) LastName(data string) string {
 }
 
 // 判断长度，大于3时，掩码前3位，小于3不脱敏
-func (m *maskImpl) FirsName(data string) string {
+func (m *maskImpl) FirstName(data string) string {
 	return m.LastName(data)
 }
 

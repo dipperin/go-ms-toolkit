@@ -17,10 +17,10 @@ func Test_maskImpl_LastName(t *testing.T) {
 func Test_maskImpl_FirsName(t *testing.T) {
 	impl := &maskImpl{}
 
-	assert.Equal(t, "***AKUMAR", impl.FirsName("SIVAKUMAR"))
-	assert.Equal(t, "HAH", impl.FirsName("HAH"))
-	assert.Equal(t, "HA", impl.FirsName("HA"))
-	assert.Equal(t, "***M", impl.FirsName("WRNM"))
+	assert.Equal(t, "***AKUMAR", impl.FirstName("SIVAKUMAR"))
+	assert.Equal(t, "HAH", impl.FirstName("HAH"))
+	assert.Equal(t, "HA", impl.FirstName("HA"))
+	assert.Equal(t, "***M", impl.FirstName("WRNM"))
 }
 
 func Test_maskImpl_IDPan(t *testing.T) {
