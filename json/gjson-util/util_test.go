@@ -55,3 +55,14 @@ func TestGetFloat(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, float64(123.123), a)
 }
+
+func TestGetArray(t *testing.T) {
+	_, err := GetArray(`{}`, "a")
+	assert.Error(t, err)
+	_, err = GetArray(`{"a":123}`, "a")
+	assert.Error(t, err)
+	_, err = GetArray(`{"a":["123","321"]}`, "a")
+	assert.NoError(t, err)
+	_, err = GetArray(`{"grade":[]}`, "scores")
+	assert.Error(t, err)
+}
