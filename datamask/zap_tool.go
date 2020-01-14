@@ -31,6 +31,7 @@ func GetMark() Mask {
 	return mask
 }
 
+// todo 这个可以做成一个map
 func String(maskType string, data string) zap.Field {
 	switch maskType {
 	case Phone:
