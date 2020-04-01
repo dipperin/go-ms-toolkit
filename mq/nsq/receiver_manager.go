@@ -1,27 +1,5 @@
 package nsq
 
-import (
-	"github.com/nsqio/go-nsq"
-	"log"
-	"os"
-)
-
-var nsqLog   logger
-var nsqLogLv nsq.LogLevel
-
-func init() {
-	nsqLog =  log.New(os.Stderr, "", log.LstdFlags)
-	nsqLogLv = nsq.LogLevelInfo
-}
-
-func SetLog(l logger) {
-	nsqLog = l
-}
-
-func SetLogLv(lv nsq.LogLevel) {
-	nsqLogLv = lv
-}
-
 type NsqHandler interface {
 	TaskConfig() (config *MqTaskConfigs)
 }
@@ -37,7 +15,7 @@ type ReceiverManager struct {
 }
 
 func NewReceiverManager(receiver MqReceiver, h ...NsqHandler) *ReceiverManager {
-	rm := &ReceiverManager{ receiver: receiver }
+	rm := &ReceiverManager{receiver: receiver}
 	rm.Add(h...)
 	return rm
 }
