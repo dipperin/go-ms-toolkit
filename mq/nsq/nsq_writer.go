@@ -92,6 +92,7 @@ func (writer *BaseNsqWriter) refreshProducer() (refreshedProducers []*nsq.Produc
 			qylog.QyLogger.Error("NsqOrderWriter new nsq producer failed", zap.String("addr", addr), zap.Error(err))
 			return
 		}
+		producer.SetLogger(nsqLog, nsqLogLv)
 
 		if err := producer.Ping(); err != nil {
 			qylog.QyLogger.Error("NsqOrderWriter nsq producer ping check failed",
