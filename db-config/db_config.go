@@ -69,10 +69,11 @@ func GetAppConfig() *AppConfig {
 
 // 应用的配置
 type AppConfig struct {
-	RedisUrl   string
-	MysqlHost  string
-	MysqlPort  string
-	MysqlUname string
+	RedisUrl        string
+	RedisClusterUrl []string
+	MysqlHost       string
+	MysqlPort       string
+	MysqlUname      string
 	// http服务的端口（在docker中都是3000）
 	HttpServerPort string
 	MongoHost      string
@@ -82,19 +83,27 @@ type AppConfig struct {
 // 获取正常环境下的配置
 func GetAppDefaultConf() *AppConfig {
 	return &AppConfig{
-		RedisUrl:   "127.0.0.1:6379",
-		MysqlHost:  "localhost",
-		MysqlPort:  "3306",
-		MysqlUname: "root",
-		MongoHost:  "localhost:27017",
-		MongoUname: "admin",
+		RedisUrl:        "127.0.0.1:6379",
+		MysqlHost:       "localhost",
+		MysqlPort:       "3306",
+		MysqlUname:      "root",
+		MongoHost:       "localhost:27017",
+		MongoUname:      "admin",
 	}
 }
 
 // 获取容器中的配置
 func GetDevDockerConf() *AppConfig {
 	return &AppConfig{
-		RedisUrl:       "redis-master.default.svc.cluster.local:6379",
+		RedisUrl: "redis-master.default.svc.cluster.local:6379",
+		RedisClusterUrl: []string{
+			"redis-cluster-node-1.default.svc.cluster.local:6379",
+			"redis-cluster-node-2.default.svc.cluster.local:6379",
+			"redis-cluster-node-3.default.svc.cluster.local:6379",
+			"redis-cluster-node-4.default.svc.cluster.local:6379",
+			"redis-cluster-node-5.default.svc.cluster.local:6379",
+			"redis-cluster-node-6.default.svc.cluster.local:6379",
+		},
 		MysqlHost:      "qy-mysql.default.svc.cluster.local",
 		MysqlPort:      "3306",
 		MysqlUname:     "qy",
@@ -113,7 +122,15 @@ func GetProdDockerConf() *AppConfig {
 		uname = strings.TrimSpace(string(data))
 	}
 	return &AppConfig{
-		RedisUrl:       "redis-master.default.svc.cluster.local:6379",
+		RedisUrl: "redis-master.default.svc.cluster.local:6379",
+		RedisClusterUrl: []string{
+			"redis-cluster-node-1.default.svc.cluster.local:6379",
+			"redis-cluster-node-2.default.svc.cluster.local:6379",
+			"redis-cluster-node-3.default.svc.cluster.local:6379",
+			"redis-cluster-node-4.default.svc.cluster.local:6379",
+			"redis-cluster-node-5.default.svc.cluster.local:6379",
+			"redis-cluster-node-6.default.svc.cluster.local:6379",
+		},
 		MysqlHost:      "qy-mysql.default.svc.cluster.local",
 		MysqlPort:      "3306",
 		MysqlUname:     uname,
