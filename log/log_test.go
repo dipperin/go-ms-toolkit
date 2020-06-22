@@ -50,7 +50,7 @@ func TestLoggerEnd(t *testing.T) {
 }
 
 func Test_newLogCore(t *testing.T) {
-	assert.NotNil(t, newLogCore(zap.DebugLevel, "/tmp", "", true))
+	assert.NotNil(t, newLogCore(zap.DebugLevel, "/tmp", "", true, false))
 }
 
 func Test_newLogOptions(t *testing.T) {
@@ -69,4 +69,30 @@ func Test_pathExists(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, true, pathExists(usr.HomeDir))
 	assert.Equal(t, false, pathExists("fdsafds"))
+}
+
+func TestTrace(t *testing.T) {
+	InitLoggerWithCaller(zap.DebugLevel, "", "", true)
+
+	QyLogger.Info("aaaaaaa")
+
+	//fmt.Println(printMyName())
+
+	//QyLogger.Named()
+}
+
+func BenchmarkLogCaller(b *testing.B) {
+	//  119269	      8697 ns/op
+	InitLoggerWithCaller(zap.DebugLevel, "", "", true)
+	for i := 0; i < b.N; i++ {
+		QyLogger.Info("aaaaaaa")
+	}
+}
+
+func BenchmarkNoCaller(b *testing.B) {
+	// 219262	      5611 ns/op
+	InitLogger(zap.DebugLevel, "", "", true)
+	for i := 0; i < b.N; i++ {
+		QyLogger.Info("aaaaaa")
+	}
 }

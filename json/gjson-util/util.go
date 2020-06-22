@@ -58,3 +58,11 @@ func GetBool(data, path string) (bool, error) {
 		return false, fmt.Errorf("%v, path: %v need: bool", ErrInvalidValueTypeInJson, path)
 	}
 }
+
+func GetArray(data, path string) ([]gjson.Result, error) {
+	r := gjson.Get(data, path)
+	if !r.IsArray() {
+		return nil, fmt.Errorf("%v, path: %v type: %d need: array", ErrInvalidValueTypeInJson, path, r.Type)
+	}
+	return r.Array(), nil
+}

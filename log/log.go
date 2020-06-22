@@ -2,11 +2,16 @@ package log
 
 import (
 	"fmt"
+	"github.com/dipperin/go-ms-toolkit/qyenv"
 	"github.com/natefinch/lumberjack"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"os"
 	"path/filepath"
+	"runtime"
+	"strconv"
+	"sync"
+	"time"
 )
 
 var QyLogger *zap.Logger
@@ -23,11 +28,28 @@ func init() {
 }
 
 // init logger
+func InitLoggerWithCaller(lvl zapcore.Level, targetDir, logFileName string, withConsole bool) {
+
+	opts := newLogOptions()
+	opts = append(opts, zap.AddCaller())
+
+	//  caller
+	QyLogger = zap.New(
+		newLogCore(lvl, targetDir, logFileName, withConsole, true),
+		opts...,
+	)
+
+	//QyLogger = QyLogger.With(zap.String("caller", printMyName()))
+}
+
+// init logger
 func InitLogger(lvl zapcore.Level, targetDir, logFileName string, withConsole bool) {
 	QyLogger = zap.New(
-		newLogCore(lvl, targetDir, logFileName, withConsole),
+		newLogCore(lvl, targetDir, logFileName, withConsole, false),
 		newLogOptions()...,
 	)
+
+	//QyLogger = QyLogger.With(zap.String("caller", printMyName()))
 }
 
 func LoggerEnd() {
@@ -39,13 +61,18 @@ func LoggerEnd() {
 }
 
 // new log core
-func newLogCore(lvl zapcore.Level, targetDir, logFileName string, withConsole bool) zapcore.Core {
+func newLogCore(lvl zapcore.Level, targetDir, logFileName string, withConsole bool, withCaller bool) zapcore.Core {
 	out := getOutPath(targetDir, logFileName)
 	errOut := getErrOutPath(targetDir, logFileName)
 
 	eConfig := zap.NewProductionEncoderConfig()
 	eConfig.EncodeDuration = zapcore.SecondsDurationEncoder
-	eConfig.EncodeTime = zapcore.ISO8601TimeEncoder
+	eConfig.EncodeTime = qyTimeEncoder
+
+	if withCaller {
+		eConfig.EncodeCaller = qyCallerEncoder
+	}
+
 	consoleEncoder := zapcore.NewConsoleEncoder(eConfig)
 
 	return zapcore.NewTee(
@@ -131,4 +158,36 @@ func getOutSink(outputPath string, withConsole bool) zapcore.WriteSyncer {
 
 func getErrOutSink(outputPath string, withConsole bool) zapcore.WriteSyncer {
 	return getSink(outputPath, []string{"stdout", "stderr"}, withConsole)
+}
+
+func qyTimeEncoder(t time.Time, enc zapcore.PrimitiveArrayEncoder) {
+	enc.AppendString(t.Format("2006-01-02 15:04:05.000"))
+}
+
+func qyCallerEncoder(caller zapcore.EntryCaller, enc zapcore.PrimitiveArrayEncoder) {
+	enc.AppendString(printHostName() + "	" + printMyName())
+}
+
+var hostName string
+var once sync.Once
+
+func printHostName() string {
+	once.Do(func() {
+		if qyenv.GetDockerEnv() == "0" || qyenv.GetDockerEnv() == "" {
+			hostName = "local"
+		} else {
+			hostName = os.Getenv("HOSTNAME")
+		}
+	})
+
+	return hostName
+}
+
+// 打印 调用者
+func printMyName() string {
+	if pc, _, lineNo, ok := runtime.Caller(6); ok {
+		return runtime.FuncForPC(pc).Name() + ":" + strconv.FormatInt(int64(lineNo), 10)
+	}
+
+	return ""
 }

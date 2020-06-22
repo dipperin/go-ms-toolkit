@@ -2,14 +2,16 @@ package nsq
 
 import (
 	"fmt"
-	"github.com/nsqio/go-nsq"
 	"time"
+
+	"github.com/nsqio/go-nsq"
 )
 
 type MqReceiver interface {
 	AddTask(task ...MqTask) MqReceiver
 	BaseHost() (baseHost *MqHostConfigs)
 	Start()
+	Stop()
 }
 
 type NsqReceiver struct {
@@ -57,6 +59,12 @@ func (r *NsqReceiver) Start() {
 	}
 }
 
+func (r *NsqReceiver) Stop() {
+	for _, task := range r.tasks {
+		task.stop()
+	}
+}
+
 type MqHostConfigs struct {
 	Lookup, Nsq []string
 }
@@ -65,12 +73,15 @@ type MqTaskConfigs struct {
 	Topic, Channel string
 	Handler        nsq.HandlerFunc
 	Host           *MqHostConfigs
+	Configs        map[string]interface{} // nsq tls configs
+	Concurrency    int // goroutines numbers
 }
 
 type MqTask interface {
 	set(config *MqTaskConfigs)
 	run()
 	connected() bool
+	stop()
 }
 
 func (c *MqHostConfigs) IsValid() {
@@ -94,13 +105,24 @@ type NsqTask struct {
 }
 
 func (task *NsqTask) set(config *MqTaskConfigs) {
-	consumer, err := nsq.NewConsumer(config.Topic, config.Channel, nsq.NewConfig())
+	nsqConf := nsq.NewConfig()
+	for option, value := range config.Configs {
+		if err := nsqConf.Set(option, value); err != nil {
+			task.Fatal = err
+			return
+		}
+	}
+	consumer, err := nsq.NewConsumer(config.Topic, config.Channel, nsqConf)
 	if err != nil {
 		task.Fatal = err
 		return
 	}
 	consumer.SetLogger(nsqLog, nsqLogLv)
-	consumer.AddHandler(config.Handler)
+	if config.Concurrency > 1 {
+		consumer.AddConcurrentHandlers(config.Handler, config.Concurrency)
+	} else {
+		consumer.AddHandler(config.Handler)
+	}
 	task.consumer = consumer
 	task.host = config.Host
 }
@@ -111,11 +133,11 @@ func (task *NsqTask) run() {
 	}
 	task.ConErr = nil
 
-	for _, url := range task.host.Lookup {
-		if err := task.consumer.ConnectToNSQLookupd(url); err != nil {
-			task.ConErr = append(task.ConErr, err)
-		}
-	}
+	//for _, url := range task.host.Lookup {
+	//	if err := task.consumer.ConnectToNSQLookupd(url); err != nil {
+	//		task.ConErr = append(task.ConErr, err)
+	//	}
+	//}
 
 	for _, url := range task.host.Nsq {
 		if err := task.consumer.ConnectToNSQD(url); err != nil {
@@ -135,4 +157,8 @@ func (task *NsqTask) connected() bool {
 		}
 	}
 	return false
+}
+
+func (task *NsqTask) stop() {
+	task.consumer.Stop()
 }

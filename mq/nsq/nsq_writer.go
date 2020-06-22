@@ -2,6 +2,7 @@ package nsq
 
 import (
 	"errors"
+
 	"github.com/dipperin/go-ms-toolkit/json"
 	qylog "github.com/dipperin/go-ms-toolkit/log"
 	"github.com/nsqio/go-nsq"
@@ -12,6 +13,7 @@ type NsqWriter interface {
 	Refresh()
 	Publish(topic string, jsonObj interface{}) error
 	PublishString(topic string, msg string) error
+	Stop()
 }
 
 type BaseNsqWriter struct {
@@ -35,6 +37,12 @@ func (writer *BaseNsqWriter) newProducers() NsqWriter {
 		panic("NsqWriter.producers length is 0")
 	}
 	return writer
+}
+
+func (writer *BaseNsqWriter) Stop() {
+	for _, producer := range writer.producers {
+		producer.Stop()
+	}
 }
 
 func (writer *BaseNsqWriter) Refresh() {
@@ -84,6 +92,7 @@ func (writer *BaseNsqWriter) refreshProducer() (refreshedProducers []*nsq.Produc
 			qylog.QyLogger.Error("NsqOrderWriter new nsq producer failed", zap.String("addr", addr), zap.Error(err))
 			return
 		}
+		producer.SetLogger(nsqLog, nsqLogLv)
 
 		if err := producer.Ping(); err != nil {
 			qylog.QyLogger.Error("NsqOrderWriter nsq producer ping check failed",
