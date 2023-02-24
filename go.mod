@@ -6,7 +6,6 @@ require (
 	cloud.google.com/go v0.37.1 // indirect
 	github.com/certifi/gocertifi v0.0.0-20190415143156-92f724a62f3e // indirect
 	github.com/denisenkom/go-mssqldb v0.0.0-20190315220205-a8ed825ac853 // indirect
-	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/erikstmartin/go-testdb v0.0.0-20160219214506-8d10e4a1bae5 // indirect
 	github.com/getsentry/raven-go v0.2.0
 	github.com/gin-gonic/gin v1.5.0
@@ -35,8 +34,7 @@ require (
 	go.uber.org/atomic v1.3.2 // indirect
 	go.uber.org/multierr v1.1.0 // indirect
 	go.uber.org/zap v1.9.1
-	golang.org/x/crypto v0.0.0-20190313024323-a1f597ede03a // indirect
-	golang.org/x/net v0.0.0-20190628185345-da137c7871d7
+	golang.org/x/net v0.7.0
 	google.golang.org/grpc v1.22.0
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0 // indirect
 )
